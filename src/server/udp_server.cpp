@@ -5,6 +5,9 @@
 #include <cstdlib>
 #include <unistd.h>
 #include <netdb.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include "../common/constants.h"
 
 void init_udp_server(char *port, int &socket_fd, struct addrinfo &hints, struct addrinfo *&res) {
     socket_fd = socket(AF_INET, SOCK_DGRAM, 0); // UDP socket
@@ -34,5 +37,39 @@ void init_udp_server(char *port, int &socket_fd, struct addrinfo &hints, struct 
     }
 
     return;
+}
+
+void* udp_server_thread(void* arg) {
+    char* port = (char*)arg;
+    int udp_socket_fd;
+    struct addrinfo udp_hints, *udp_res;
+    struct sockaddr_in client_addr;
+
+    std::cout << "[UDP] Initializing UDP server on port " << port << std::endl;
+    init_udp_server(port, udp_socket_fd, udp_hints, udp_res);
+
+    socklen_t addr_len = sizeof(client_addr);
+    char buffer[MAX_MESSAGE_LENGTH];
+    int bytes_read;
+
+    while (true) {
+        bytes_read = recvfrom(udp_socket_fd, buffer, sizeof(buffer) - 1, 0,
+                              (struct sockaddr *)&client_addr, &addr_len);
+        if (bytes_read == -1) {
+            std::cerr << "[UDP] Failed to receive message" << std::endl;
+            continue;
+        }
+
+        buffer[bytes_read] = '\0';
+        std::cout << "[UDP] Received message: " << buffer << std::endl;
+        
+        const char* response = "Message received";
+        sendto(udp_socket_fd, response, strlen(response), 0,
+               (struct sockaddr *)&client_addr, addr_len);
+    }
+
+    freeaddrinfo(udp_res);
+    close(udp_socket_fd);
+    return nullptr;
 }
 

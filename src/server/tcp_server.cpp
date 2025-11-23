@@ -5,6 +5,9 @@
 #include <cstdlib>
 #include <unistd.h>
 #include <netdb.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include "../common/constants.h"
 
 void init_tcp_server(char *port, int &socket_fd, struct addrinfo &hints, struct addrinfo *&res) {
     socket_fd = socket(AF_INET, SOCK_STREAM, 0); // TCP socket
@@ -42,5 +45,43 @@ void init_tcp_server(char *port, int &socket_fd, struct addrinfo &hints, struct 
     }
 
     return;
+}
+
+void* tcp_server_thread(void* arg) {
+    char* port = (char*)arg;
+    int tcp_socket_fd;
+    struct addrinfo tcp_hints, *tcp_res;
+    struct sockaddr_in client_addr;
+
+    std::cout << "[TCP] Initializing TCP server on port " << port << std::endl;
+    init_tcp_server(port, tcp_socket_fd, tcp_hints, tcp_res);
+
+    socklen_t addr_len = sizeof(client_addr);
+    char buffer[MAX_MESSAGE_LENGTH];
+    int bytes_read;
+
+    while (true) {
+        int client_fd = accept(tcp_socket_fd, (struct sockaddr *)&client_addr, &addr_len);
+        if (client_fd == -1) {
+            std::cerr << "[TCP] Failed to accept connection" << std::endl;
+            continue;
+        }
+
+        bytes_read = read(client_fd, buffer, sizeof(buffer));
+        if (bytes_read == -1) {
+            std::cerr << "[TCP] Failed to read from client" << std::endl;
+            close(client_fd);
+            continue;
+        }
+
+        buffer[bytes_read] = '\0';
+        std::cout << "[TCP] Received message: " << buffer << std::endl;
+        write(client_fd, "Message received", 16);
+        close(client_fd);
+    }
+
+    freeaddrinfo(tcp_res);
+    close(tcp_socket_fd);
+    return nullptr;
 }
 
