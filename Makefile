@@ -3,7 +3,7 @@ CLIENT_CPP := $(wildcard src/client/*.cpp)
 
 build: $(SERVER_CPP) $(CLIENT_CPP)
 	rm -rf ./build/*
-	g++ -o build/ES $(SERVER_CPP)
+	g++ -pthread -o build/ES $(SERVER_CPP)
 	g++ -o build/user $(CLIENT_CPP)
 
 run: build
