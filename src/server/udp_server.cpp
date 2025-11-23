@@ -7,7 +7,77 @@
 #include <netdb.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+
 #include "../common/constants.h"
+#include "user.h"
+
+/**
+ * Login a user, responds with "RLI <status>"
+ * If the user is not registered, it will be registered and respond with status=REG.
+ * If the user is registered and the password is correct, it will respond with status=OK.
+ * If the user is registered and the password is incorrect, it will respond with status=NOK.
+ * @param uid: user ID
+ * @param password: user password
+ * @param socket_fd: socket file descriptor
+ * @param client_addr: client address
+ * @param addr_len: client address length
+ */
+void login(std::string uid, std::string password, int &socket_fd, struct sockaddr_in &client_addr, socklen_t &addr_len) {
+    if (!is_user_registered(uid)) {
+        add_user(uid, password);
+        sendto(socket_fd, "RLI REG", 8, 0, (struct sockaddr *)&client_addr, addr_len);
+        return;
+    }
+
+    if (get_user(uid).password != password) {
+        sendto(socket_fd, "RLI NOK", 8, 0, (struct sockaddr *)&client_addr, addr_len);
+        return;
+    }
+
+    login_user(uid);
+    sendto(socket_fd, "RLI OK", 7, 0, (struct sockaddr *)&client_addr, addr_len);
+    return;
+}
+
+/**
+ * Logout a user, responds with "RLO <status>"
+ * If the user is not registered, it will respond with status=UNR.
+ * If the user is not logged in, it will respond with status=NOK.
+ * If the password is incorrect, it will respond with status=WRP.
+ * If the user is registered and logged in and the password is correct, it will respond with status=OK.
+ * @param uid: user ID
+ * @param socket_fd: socket file descriptor
+ * @param client_addr: client address
+ * @param addr_len: client address length
+ */
+void logout(std::string uid, std::string password, int &socket_fd, struct sockaddr_in &client_addr, socklen_t &addr_len) {
+    if (!is_user_registered(uid)) {
+        sendto(socket_fd, "RLO UNR", 8, 0, (struct sockaddr *)&client_addr, addr_len);
+        return;
+    }
+
+    if (!is_user_logged_in(uid)) {
+        sendto(socket_fd, "RLO NOK", 8, 0, (struct sockaddr *)&client_addr, addr_len);
+        return;
+    }
+
+    if (get_user(uid).password != password) {
+        sendto(socket_fd, "RLO WRP", 8, 0, (struct sockaddr *)&client_addr, addr_len);
+        return;
+    }
+
+    logout_user(uid);
+    sendto(socket_fd, "RLO OK", 7, 0, (struct sockaddr *)&client_addr, addr_len);
+    return;
+}
+
+/**
+ * Init UDP server
+ * @param port: port
+ * @param socket_fd: socket file descriptor
+ * @param hints: hints
+ * @param res: result
+ */
 
 void init_udp_server(char *port, int &socket_fd, struct addrinfo &hints, struct addrinfo *&res) {
     socket_fd = socket(AF_INET, SOCK_DGRAM, 0); // UDP socket
