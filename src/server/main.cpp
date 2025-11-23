@@ -8,8 +8,17 @@
 #include "tcp_server.h"
 #include "udp_server.h"
 
-// Server settings
-char *port = (char *)"58011"; // Group 11 + 50000
+/** 
+ * Server port
+ * Group 11 + 50000 is the default port for the server.
+ */
+char *port = (char *)"58011";
+
+/** 
+ * Verbose mode
+ * It outputs to the screen a short description of the received requests
+ * (UID, type of request), and the IP and port originating those requests.
+ */
 bool verbose = false;
 
 int main(int argc, char *argv[]) {

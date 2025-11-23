@@ -47,6 +47,13 @@ void init_tcp_server(char *port, int &socket_fd, struct addrinfo &hints, struct 
     return;
 }
 
+/**
+ * TCP server thread
+ * TCP will be used to transfer files with more information to the user application,
+ * and managing events and reservations.
+ * @param arg: port
+ * @return nullptr
+ */
 void* tcp_server_thread(void* arg) {
     char* port = (char*)arg;
     int tcp_socket_fd;

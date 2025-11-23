@@ -39,6 +39,12 @@ void init_udp_server(char *port, int &socket_fd, struct addrinfo &hints, struct 
     return;
 }
 
+/**
+ * UDP server thread
+ * UDP will be used for managing users and listing users' activities.
+ * @param arg: port
+ * @return nullptr
+ */
 void* udp_server_thread(void* arg) {
     char* port = (char*)arg;
     int udp_socket_fd;
