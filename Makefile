@@ -1,7 +1,10 @@
-build: src/server/main.cpp src/client/main.cpp
+SERVER_CPP := $(wildcard src/server/*.cpp)
+CLIENT_CPP := $(wildcard src/client/*.cpp)
+
+build: $(SERVER_CPP) $(CLIENT_CPP)
 	rm -rf ./build/*
-	g++ -o build/ES src/server/main.cpp
-	g++ -o build/user src/client/main.cpp
+	g++ -o build/ES $(SERVER_CPP)
+	g++ -o build/user $(CLIENT_CPP)
 
 run: build
 	./build/ES
