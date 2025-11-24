@@ -25,17 +25,17 @@
 void login(std::string uid, std::string password, int &socket_fd, struct sockaddr_in &client_addr, socklen_t &addr_len) {
     if (!is_user_registered(uid)) {
         add_user(uid, password);
-        sendto(socket_fd, "RLI REG", 8, 0, (struct sockaddr *)&client_addr, addr_len);
+        sendto(socket_fd, "RLI REG\n", 8, 0, (struct sockaddr *)&client_addr, addr_len);
         return;
     }
 
     if (get_user(uid).password != password) {
-        sendto(socket_fd, "RLI NOK", 8, 0, (struct sockaddr *)&client_addr, addr_len);
+        sendto(socket_fd, "RLI NOK\n", 8, 0, (struct sockaddr *)&client_addr, addr_len);
         return;
     }
 
     login_user(uid);
-    sendto(socket_fd, "RLI OK", 7, 0, (struct sockaddr *)&client_addr, addr_len);
+    sendto(socket_fd, "RLI OK\n", 7, 0, (struct sockaddr *)&client_addr, addr_len);
     return;
 }
 
@@ -52,22 +52,22 @@ void login(std::string uid, std::string password, int &socket_fd, struct sockadd
  */
 void logout(std::string uid, std::string password, int &socket_fd, struct sockaddr_in &client_addr, socklen_t &addr_len) {
     if (!is_user_registered(uid)) {
-        sendto(socket_fd, "RLO UNR", 8, 0, (struct sockaddr *)&client_addr, addr_len);
+        sendto(socket_fd, "RLO UNR\n", 8, 0, (struct sockaddr *)&client_addr, addr_len);
         return;
     }
 
     if (!is_user_logged_in(uid)) {
-        sendto(socket_fd, "RLO NOK", 8, 0, (struct sockaddr *)&client_addr, addr_len);
+        sendto(socket_fd, "RLO NOK\n", 8, 0, (struct sockaddr *)&client_addr, addr_len);
         return;
     }
 
     if (get_user(uid).password != password) {
-        sendto(socket_fd, "RLO WRP", 8, 0, (struct sockaddr *)&client_addr, addr_len);
+        sendto(socket_fd, "RLO WRP\n", 8, 0, (struct sockaddr *)&client_addr, addr_len);
         return;
     }
 
     logout_user(uid);
-    sendto(socket_fd, "RLO OK", 7, 0, (struct sockaddr *)&client_addr, addr_len);
+    sendto(socket_fd, "RLO OK\n", 7, 0, (struct sockaddr *)&client_addr, addr_len);
     return;
 }
 
@@ -126,22 +126,62 @@ void* udp_server_thread(void* arg) {
 
     socklen_t addr_len = sizeof(client_addr);
     char buffer[MAX_MESSAGE_LENGTH];
-    int bytes_read;
+    int n;
 
     while (true) {
-        bytes_read = recvfrom(udp_socket_fd, buffer, sizeof(buffer) - 1, 0,
+        n = recvfrom(udp_socket_fd, buffer, sizeof(buffer) - 1, 0,
                               (struct sockaddr *)&client_addr, &addr_len);
-        if (bytes_read == -1) {
+        if (n == -1) {
             std::cerr << "[UDP] Failed to receive message" << std::endl;
             continue;
         }
+        char cmd[CMD_LENGTH + 1];
+        char cmd_rest[MAX_MESSAGE_LENGTH - CMD_LENGTH + 1];
 
-        buffer[bytes_read] = '\0';
+        sscanf(buffer, "%s %255[^\n]", cmd, cmd_rest);
+
+        if(strcmp(cmd, "LIN") == 0) {
+            char uid[8];
+            char password[10];
+            sscanf(cmd_rest, "%6s %8s", uid, password);
+            login(uid, password, udp_socket_fd, client_addr, addr_len);
+        } else if (strcmp(cmd, "LOU") == 0) {
+            char uid[8];
+            char password[10];
+            sscanf(cmd_rest, "%6s %8s", uid, password);
+            logout(uid, password, udp_socket_fd, client_addr, addr_len);
+        } else if (strcmp(cmd, "UNR") == 0) {
+            n = sendto(udp_socket_fd, "UNR\n", 4, 0,
+                       (struct sockaddr *)&client_addr, addr_len);
+            if (n == -1) {
+                perror("sendto");
+                exit(1);
+            }
+        } else if (strcmp(cmd, "LME") == 0) {
+            n = sendto(udp_socket_fd, "LME\n", 4, 0,
+                       (struct sockaddr *)&client_addr, addr_len);
+            if (n == -1) {
+                perror("sendto");
+                exit(1);
+            }
+        } else if (strcmp(cmd, "LMR") == 0) {
+            n = sendto(udp_socket_fd, "LMR\n", 4, 0,
+                       (struct sockaddr *)&client_addr, addr_len);
+            if (n == -1) {
+                perror("sendto");
+                exit(1);
+            }
+        } else {
+            n = sendto(udp_socket_fd, "ERR\n", 4, 0,
+                       (struct sockaddr *)&client_addr, addr_len);
+            if (n == -1) {
+                perror("sendto");
+                exit(1);
+            }
+        }   
+
+        buffer[n] = '\0';
         std::cout << "[UDP] Received message: " << buffer << std::endl;
-        
-        const char* response = "Message received";
-        sendto(udp_socket_fd, response, strlen(response), 0,
-               (struct sockaddr *)&client_addr, addr_len);
     }
 
     freeaddrinfo(udp_res);
