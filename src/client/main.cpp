@@ -1,5 +1,6 @@
 #include <iostream>
 #include <unistd.h>
+#include <string>
 #include <cstdlib>
 #include <cstring>
 #include <cstdbool>
@@ -10,13 +11,15 @@
 #include <netdb.h>
 
 #include "../common/constants.h"
+#include "../common/commands.h"
 
 int socket_fd;
 struct addrinfo hints, *res;
 
+char *ESIP = (char *)"127.0.0.1";
+char *ESport = (char *)"58011"; // Group 11 + 50000
+
 int main(int argc, char *argv[]) {
-    char *ESIP = (char *)"127.0.0.1";
-    char *ESport = (char *)"58011"; // Group 11 + 50000
     int opt;
     ssize_t n;
     socklen_t addrlen;
@@ -67,6 +70,11 @@ int main(int argc, char *argv[]) {
 
     while (true)   {
         fgets(buffer, sizeof(buffer), stdin);
+        const std::string command = std::string(buffer).substr(0, CMD_LENGTH);
+        if (command.empty() || command.length() != CMD_LENGTH || !is_valid_command(command)) {
+            std::cerr << "Invalid command: " << command << std::endl;
+            continue;
+        }
 
         n = sendto(socket_fd, buffer, strlen(buffer) - 1, 0, res->ai_addr, res->ai_addrlen);
         if (n == -1) {

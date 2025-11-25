@@ -3,5 +3,7 @@
 
 #define MAX_MESSAGE_LENGTH 128
 #define CMD_LENGTH 3
+#define UID_LENGTH 6
+#define PASSWORD_LENGTH 8
 
 #endif
