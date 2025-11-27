@@ -10,14 +10,31 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#include "../common/commands.h"
 #include "../common/constants.h"
+#include "command.h"
+#include "send.h"
+#include <sstream>
 
 int socket_fd;
 struct addrinfo hints, *res;
 
 char *ESIP = (char *)"127.0.0.1";
 char *ESport = (char *)"58011"; // Group 11 + 50000
+
+
+/**
+ * Get the command and arguments from a buffer with return.
+ * @param buffer: buffer
+ * @param command: command
+ * @return std::stringstream: the stream with the arguments
+ */
+std::stringstream get_command_and_args_with_return(char *buffer, std::string &command) {
+    std::stringstream ss(buffer);
+    if (ss >> command) {
+        return ss;
+    }
+    return std::stringstream("");
+}
 
 int main(int argc, char *argv[]) {
     int opt;
@@ -59,37 +76,62 @@ int main(int argc, char *argv[]) {
         std::cerr << "Failed to get address info: " << gai_strerror(error) << std::endl;
         exit(EXIT_FAILURE);
     }
-    /*
-        int n = connect(socket_fd, res->ai_addr, res->ai_addrlen);
-        if (n == -1) {
-            std::cerr << "Failed to connect to server" << std::endl;
-            exit(EXIT_FAILURE);
-        }*/ //TCP
 
     while (true) {
         fgets(buffer, sizeof(buffer), stdin);
-        std::string message = std::string(buffer);
-        const CommandType command_type = get_command_type(message.substr(0, CMD_LENGTH));
-        switch (command_type) {
-            case LOGIN:
-                if (!is_valid_login_command(message)) {
-                    std::cerr << "Invalid login command: " << message << std::endl;
-                    continue;
-                }
-                break;
-            case LOGOUT:
-                if (!is_valid_logout_command(message)) {
-                    std::cerr << "Invalid logout command: " << message << std::endl;
-                    continue;
-                }
-                break;
-            case INVALID_COMMAND:
-                std::cerr << "Invalid command: " << message << std::endl;
-                continue;
-            default:
-                std::cerr << "Invalid command: " << message << std::endl;
-                continue;
+        std::string command;
+        std::stringstream args = get_command_and_args_with_return(buffer, command);
+        
+        if (!is_valid_command(command)) {
+            std::cerr << "Invalid command: " << command << std::endl;
+            continue;
         }
+        
+        UserCommand user_command = get_command(command);
+        std::string message;
+        bool should_continue = false;
+        
+        switch (user_command) {
+            case LOGIN: {
+                if (!parse_login_input(args, message)) {
+                    std::cerr << "Invalid login arguments" << std::endl;
+                    should_continue = true;
+                    break;
+                }
+                char msg_buffer[MAX_MESSAGE_LENGTH];
+                strcpy(msg_buffer, message.c_str());
+                if (!send_udp_command(socket_fd, msg_buffer, res)) {
+                    std::cerr << "Failed to send login command to server" << std::endl;
+                    should_continue = true;
+                }
+                break;
+            }
+            case LOGOUT: {
+                if (!parse_logout_input(args, message)) {
+                    std::cerr << "Invalid logout arguments" << std::endl;
+                    should_continue = true;
+                    break;
+                }
+                char msg_buffer[MAX_MESSAGE_LENGTH];
+                strcpy(msg_buffer, message.c_str());
+                if (!send_udp_command(socket_fd, msg_buffer, res)) {
+                    std::cerr << "Failed to send logout command to server" << std::endl;
+                    should_continue = true;
+                }
+                break;
+            }
+            case UNREGISTER:
+                // TODO: Implement unregister
+                break;
+            default:
+                should_continue = true;
+                break;
+        }
+        
+        if (should_continue) {
+            continue;
+        }
+
 
         n = sendto(socket_fd, buffer, strlen(buffer) - 1, 0, res->ai_addr, res->ai_addrlen);
         if (n == -1) {

@@ -9,24 +9,20 @@
 
 const int space_and_newline_length = 3;
 
+CommandType get_command_type(std::string command) {
+    if (CommandUDPMap.find(command) != CommandUDPMap.end()) {
+        return CommandUDPMap.at(command);
+    } else if (CommandTCPMap.find(command) != CommandTCPMap.end()) {
+        return CommandTCPMap.at(command);
+    }
+    return INVALID_COMMAND;
+}
+
 bool is_valid_command_udp(std::string command) { return CommandUDPMap.find(command) != CommandUDPMap.end(); }
 
 bool is_valid_command_tcp(std::string command) { return CommandTCPMap.find(command) != CommandTCPMap.end(); }
 
 bool is_valid_command(std::string command) { return is_valid_command_udp(command) || is_valid_command_tcp(command); }
-
-CommandType get_command_type(std::string command) {
-    if (command.empty() || command.length() != CMD_LENGTH) {
-        return INVALID_COMMAND;
-    }
-
-    if (is_valid_command_udp(command)) {
-        return CommandUDPMap.at(command);
-    } else if (is_valid_command_tcp(command)) {
-        return CommandTCPMap.at(command);
-    }
-    return INVALID_COMMAND;
-}
 
 bool is_valid_login_command(std::string message) {
     if (message.empty() || message.length() != CMD_LENGTH + UID_LENGTH + PASSWORD_LENGTH + space_and_newline_length) {
