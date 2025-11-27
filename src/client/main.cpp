@@ -70,10 +70,27 @@ int main(int argc, char *argv[]) {
 
     while (true)   {
         fgets(buffer, sizeof(buffer), stdin);
-        const std::string command = std::string(buffer).substr(0, CMD_LENGTH);
-        if (command.empty() || command.length() != CMD_LENGTH || !is_valid_command(command)) {
-            std::cerr << "Invalid command: " << command << std::endl;
-            continue;
+        std::string message = std::string(buffer);
+        const CommandType command_type = get_command_type(message.substr(0, CMD_LENGTH));
+        switch (command_type) {
+            case LOGIN:
+                if (!is_valid_login_command(message)) {
+                    std::cerr << "Invalid login command: " << message << std::endl;
+                    continue;
+                }
+                break;
+            case LOGOUT:
+                if (!is_valid_logout_command(message)) {
+                    std::cerr << "Invalid logout command: " << message << std::endl;
+                    continue;
+                }
+                break;
+            case INVALID_COMMAND:
+                std::cerr << "Invalid command: " << message << std::endl;
+                continue;
+            default:
+                std::cerr << "Invalid command: " << message << std::endl;
+                continue;
         }
 
         n = sendto(socket_fd, buffer, strlen(buffer) - 1, 0, res->ai_addr, res->ai_addrlen);
