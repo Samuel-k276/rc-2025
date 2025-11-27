@@ -15,7 +15,7 @@ bool is_valid_command_tcp(std::string command) { return CommandTCPMap.find(comma
 
 bool is_valid_command(std::string command) { return is_valid_command_udp(command) || is_valid_command_tcp(command); }
 
-CommandType get_command_type(std::string command) {
+CommandType get_command_type(std::string  command) {
     if (command.empty() || command.length() != CMD_LENGTH) {
         return INVALID_COMMAND;
     }
@@ -105,6 +105,5 @@ bool is_valid_list_my_reservations_command(std::string message) {
     std::string password;
     ss >> command >> uid >> password;
 
-    return get_command_type(command) == 
-    LIST_MY_RESERVATIONS && is_uid_valid(uid) && is_password_valid(password);
+    return get_command_type(command) == LIST_MY_RESERVATIONS && is_uid_valid(uid) && is_password_valid(password);
 }
