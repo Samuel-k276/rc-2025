@@ -73,7 +73,7 @@ const std::unordered_map<UserCommand, std::string> command_to_string = {
  * @param command: command
  * @return bool: true if the command is valid, false otherwise
  */
-bool is_valid_command(std::string command);
+bool is_valid_client_command(std::string command);
 
 /**
  * Get the command from a command.
@@ -91,11 +91,34 @@ UserCommand get_command(std::string command);
 bool parse_login_input(std::stringstream &args, std::string &message);
 
 /**
- * Parse the logout input and return the message in the format "LOU".
+ * Parse the logout input and return the message in the format "LOU <uid> <password>".
  * @param args: arguments
  * @param message: message
  * @return bool: true if the logout input is parsed successfully, false otherwise
  */
 bool parse_logout_input(std::stringstream &args, std::string &message);
+
+/**
+ * Parse the change pass input and return the message in the format "CPS <uid> <old_password> <new_password>".
+ * @param args: arguments
+ * @param message: message
+ * @return bool: true if the change pass input is parsed successfully, false otherwise
+ */
+bool parse_change_pass_input(std::stringstream &args, std::string &message);
+
+/**
+ * Parse the unregister input and return the message in the format "UNR <uid> <password>".
+ * @param args: arguments
+ * @param message: message
+ * @return bool: true if the unregister input is parsed successfully, false otherwise
+ */
+bool parse_unregister_input(std::stringstream &args, std::string &message);
+
+/**
+ * Parse the exit input and return the message in the format "EXT".
+ * @param args: arguments
+ * @return bool: true if the exit input is parsed successfully, false otherwise
+ */
+bool parse_exit_input(std::stringstream &args);
 
 #endif

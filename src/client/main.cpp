@@ -5,6 +5,7 @@
 #include <iostream>
 #include <netdb.h>
 #include <netinet/in.h>
+#include <sstream>
 #include <string>
 #include <sys/socket.h>
 #include <sys/types.h>
@@ -13,14 +14,13 @@
 #include "../common/constants.h"
 #include "command.h"
 #include "send.h"
-#include <sstream>
+#include "session.h"
 
 int socket_fd;
 struct addrinfo hints, *res;
 
 char *ESIP = (char *)"127.0.0.1";
 char *ESport = (char *)"58011"; // Group 11 + 50000
-
 
 /**
  * Get the command and arguments from a buffer with return.
@@ -81,75 +81,61 @@ int main(int argc, char *argv[]) {
         fgets(buffer, sizeof(buffer), stdin);
         std::string command;
         std::stringstream args = get_command_and_args_with_return(buffer, command);
-        
-        if (!is_valid_command(command)) {
-            std::cerr << "Invalid command: " << command << std::endl;
+
+        if (!is_valid_client_command(command)) {
+            std::cerr << "Unknown command: " << command << std::endl;
             continue;
         }
-        
+
         UserCommand user_command = get_command(command);
         std::string message;
-        bool should_continue = false;
-        
+
         switch (user_command) {
             case LOGIN: {
                 if (!parse_login_input(args, message)) {
                     std::cerr << "Invalid login arguments" << std::endl;
-                    should_continue = true;
                     break;
                 }
-                char msg_buffer[MAX_MESSAGE_LENGTH];
-                strcpy(msg_buffer, message.c_str());
-                if (!send_udp_command(socket_fd, msg_buffer, res)) {
+                if (!send_udp_command(socket_fd, message, res)) {
                     std::cerr << "Failed to send login command to server" << std::endl;
-                    should_continue = true;
                 }
                 break;
             }
             case LOGOUT: {
                 if (!parse_logout_input(args, message)) {
                     std::cerr << "Invalid logout arguments" << std::endl;
-                    should_continue = true;
                     break;
                 }
-                char msg_buffer[MAX_MESSAGE_LENGTH];
-                strcpy(msg_buffer, message.c_str());
-                if (!send_udp_command(socket_fd, msg_buffer, res)) {
+                if (!send_udp_command(socket_fd, message, res)) {
                     std::cerr << "Failed to send logout command to server" << std::endl;
-                    should_continue = true;
                 }
                 break;
             }
             case UNREGISTER:
-                // TODO: Implement unregister
+                if (!parse_unregister_input(args, message)) {
+                    std::cerr << "Invalid unregister arguments" << std::endl;
+                    break;
+                }
+                if (!send_udp_command(socket_fd, message, res)) {
+                    std::cerr << "Failed to send unregister command to server" << std::endl;
+                }
+                break;
+            case EXIT:
+                if (!parse_exit_input(args)) {
+                    std::cerr << "Invalid exit arguments" << std::endl;
+                    break;
+                }
+                if (is_user_logged_in()) {
+                    std::cerr << "User is logged in, cannot exit, please logout first" << std::endl;
+                    break;
+                }
+                std::cout << "Exiting program" << std::endl;
+                exit(EXIT_SUCCESS);
                 break;
             default:
-                should_continue = true;
+                std::cerr << "Unknown command: " << command << std::endl;
                 break;
         }
-        
-        if (should_continue) {
-            continue;
-        }
-
-
-        n = sendto(socket_fd, buffer, strlen(buffer) - 1, 0, res->ai_addr, res->ai_addrlen);
-        if (n == -1) {
-            perror("sendto");
-            exit(1);
-        }
-        if (strcmp(buffer, "exit\n") == 0) {
-            break;
-        }
-
-        addrlen = sizeof(addr);
-        n = recvfrom(socket_fd, buffer, sizeof(buffer), 0, (struct sockaddr *)&addr, &addrlen);
-        if (n == -1) {
-            perror("recvfrom");
-            exit(1);
-        }
-        write(1, "Echo from server: ", 18);
-        write(1, buffer, n);
     }
 
     freeaddrinfo(res);

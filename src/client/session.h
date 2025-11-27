@@ -31,4 +31,11 @@ std::string get_user_password();
  * @param password: user password
  */
 void set_user_password(std::string password);
+
+/**
+ * Check if the user is logged in.
+ * @return bool: true if the user is logged in, false otherwise
+ */
+bool is_user_logged_in();
+
 #endif

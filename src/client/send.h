@@ -1,9 +1,9 @@
 #ifndef SEND_H
 #define SEND_H
 
+#include "command.h"
 #include <netdb.h>
 #include <string>
-#include "command.h"
 
 /**
  * Open a TCP connection to the server and send a command.
@@ -22,6 +22,6 @@ bool send_tcp_command(int socket_fd, char *buffer);
  * @param res: address info result
  * @return bool: true if the command is sent successfully, false otherwise
  */
-bool send_udp_command(int socket_fd, char *message, struct addrinfo *res);
+bool send_udp_command(int socket_fd, const std::string &message, struct addrinfo *res);
 
 #endif
