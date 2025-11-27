@@ -1,25 +1,19 @@
 #include "commands.h"
 #include "input.h"
-#include <string>
-#include <sstream>
 #include <cstdbool>
 #include <iostream>
+#include <sstream>
+#include <string>
 
 #include "../common/constants.h"
 
 const int space_and_newline_length = 3;
 
-bool is_valid_command_udp(std::string command) {
-    return CommandUDPMap.find(command) != CommandUDPMap.end();
-}
+bool is_valid_command_udp(std::string command) { return CommandUDPMap.find(command) != CommandUDPMap.end(); }
 
-bool is_valid_command_tcp(std::string command) {
-    return CommandTCPMap.find(command) != CommandTCPMap.end();
-}
+bool is_valid_command_tcp(std::string command) { return CommandTCPMap.find(command) != CommandTCPMap.end(); }
 
-bool is_valid_command(std::string command) {
-    return is_valid_command_udp(command) || is_valid_command_tcp(command);
-}
+bool is_valid_command(std::string command) { return is_valid_command_udp(command) || is_valid_command_tcp(command); }
 
 CommandType get_command_type(std::string command) {
     if (command.empty() || command.length() != CMD_LENGTH) {

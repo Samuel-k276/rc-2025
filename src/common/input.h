@@ -1,9 +1,9 @@
 #ifndef INPUT_H
 #define INPUT_H
 
-#include <string>
-#include <regex>
 #include <cstdbool>
+#include <regex>
+#include <string>
 
 #include "constants.h"
 

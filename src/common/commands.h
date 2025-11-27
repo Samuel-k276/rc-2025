@@ -23,20 +23,12 @@ enum CommandType {
 };
 
 const static std::unordered_map<std::string, CommandType> CommandUDPMap = {
-    {"LIN", LOGIN},
-    {"LOU", LOGOUT},
-    {"UNR", UNREGISTER},
-    {"LME", LIST_MY_EVENTS},
-    {"LMR", LIST_MY_RESERVATIONS},
+    {"LIN", LOGIN}, {"LOU", LOGOUT}, {"UNR", UNREGISTER}, {"LME", LIST_MY_EVENTS}, {"LMR", LIST_MY_RESERVATIONS},
 };
 
 const static std::unordered_map<std::string, CommandType> CommandTCPMap = {
-    {"CRE", CREATE_EVENT},
-    {"CLS", CLOSE_EVENT},
-    {"LST", LIST_EVENTS},
-    {"SED", SHOW_EVENT_DETAILS},
-    {"RID", RESERVE},
-    {"CPS", CHANGE_PASS},
+    {"CRE", CREATE_EVENT},       {"CLS", CLOSE_EVENT}, {"LST", LIST_EVENTS},
+    {"SED", SHOW_EVENT_DETAILS}, {"RID", RESERVE},     {"CPS", CHANGE_PASS},
 };
 
 /**

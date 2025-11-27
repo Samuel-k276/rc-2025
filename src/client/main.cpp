@@ -1,17 +1,17 @@
-#include <iostream>
-#include <unistd.h>
-#include <string>
+#include <arpa/inet.h>
+#include <cstdbool>
 #include <cstdlib>
 #include <cstring>
-#include <cstdbool>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
+#include <iostream>
 #include <netdb.h>
+#include <netinet/in.h>
+#include <string>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <unistd.h>
 
-#include "../common/constants.h"
 #include "../common/commands.h"
+#include "../common/constants.h"
 
 int socket_fd;
 struct addrinfo hints, *res;
@@ -42,8 +42,7 @@ int main(int argc, char *argv[]) {
 
     std::cout << "Connecting to server at " << ESIP << ":" << ESport << std::endl;
 
-
-    //socket_fd = socket(AF_INET, SOCK_STREAM, 0); TCP
+    // socket_fd = socket(AF_INET, SOCK_STREAM, 0); TCP
     socket_fd = socket(AF_INET, SOCK_DGRAM, 0);
     if (socket_fd == -1) {
         std::cerr << "Failed to create socket" << std::endl;
@@ -51,7 +50,7 @@ int main(int argc, char *argv[]) {
     }
 
     memset(&hints, 0, sizeof(hints));
-    hints.ai_family = AF_INET; // IPv4
+    hints.ai_family = AF_INET;      // IPv4
     hints.ai_socktype = SOCK_DGRAM; // UDP socket
     // hints.ai_socktype = SOCK_STREAM; // TCP socket
 
@@ -60,15 +59,14 @@ int main(int argc, char *argv[]) {
         std::cerr << "Failed to get address info: " << gai_strerror(error) << std::endl;
         exit(EXIT_FAILURE);
     }
-/*
-    int n = connect(socket_fd, res->ai_addr, res->ai_addrlen);
-    if (n == -1) {
-        std::cerr << "Failed to connect to server" << std::endl;
-        exit(EXIT_FAILURE);
-    }*/ //TCP
+    /*
+        int n = connect(socket_fd, res->ai_addr, res->ai_addrlen);
+        if (n == -1) {
+            std::cerr << "Failed to connect to server" << std::endl;
+            exit(EXIT_FAILURE);
+        }*/ //TCP
 
-
-    while (true)   {
+    while (true) {
         fgets(buffer, sizeof(buffer), stdin);
         std::string message = std::string(buffer);
         const CommandType command_type = get_command_type(message.substr(0, CMD_LENGTH));
@@ -101,7 +99,7 @@ int main(int argc, char *argv[]) {
         if (strcmp(buffer, "exit\n") == 0) {
             break;
         }
-        
+
         addrlen = sizeof(addr);
         n = recvfrom(socket_fd, buffer, sizeof(buffer), 0, (struct sockaddr *)&addr, &addrlen);
         if (n == -1) {

@@ -1,13 +1,13 @@
 #include "tcp_server.h"
 
-#include <iostream>
-#include <cstring>
+#include "../common/constants.h"
+#include <arpa/inet.h>
 #include <cstdlib>
-#include <unistd.h>
+#include <cstring>
+#include <iostream>
 #include <netdb.h>
 #include <netinet/in.h>
-#include <arpa/inet.h>
-#include "../common/constants.h"
+#include <unistd.h>
 
 void init_tcp_server(char *port, int &socket_fd, struct addrinfo &hints, struct addrinfo *&res) {
     socket_fd = socket(AF_INET, SOCK_STREAM, 0); // TCP socket
@@ -17,7 +17,7 @@ void init_tcp_server(char *port, int &socket_fd, struct addrinfo &hints, struct 
     }
 
     memset(&hints, 0, sizeof(hints));
-    hints.ai_family = AF_INET; // IPv4
+    hints.ai_family = AF_INET;       // IPv4
     hints.ai_socktype = SOCK_STREAM; // TCP socket
     hints.ai_flags = AI_PASSIVE;
 
@@ -27,7 +27,7 @@ void init_tcp_server(char *port, int &socket_fd, struct addrinfo &hints, struct 
         close(socket_fd);
         exit(EXIT_FAILURE);
     }
-    
+
     error = bind(socket_fd, res->ai_addr, res->ai_addrlen);
     if (error == -1) {
         std::cerr << "Failed to bind socket" << std::endl;
@@ -54,8 +54,8 @@ void init_tcp_server(char *port, int &socket_fd, struct addrinfo &hints, struct 
  * @param arg: port
  * @return nullptr
  */
-void* tcp_server_thread(void* arg) {
-    char* port = (char*)arg;
+void *tcp_server_thread(void *arg) {
+    char *port = (char *)arg;
     int tcp_socket_fd;
     struct addrinfo tcp_hints, *tcp_res;
     struct sockaddr_in client_addr;
@@ -91,4 +91,3 @@ void* tcp_server_thread(void* arg) {
     close(tcp_socket_fd);
     return nullptr;
 }
-

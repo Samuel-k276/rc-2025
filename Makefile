@@ -17,4 +17,7 @@ run: build
 clean: build
 	rm -rf ./build/*
 
-.PHONY: build run clean
+format:
+	find src -type f \( -name "*.cpp" -o -name "*.h" \) -exec clang-format -i {} \;
+
+.PHONY: build run clean format

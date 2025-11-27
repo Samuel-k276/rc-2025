@@ -1,17 +1,17 @@
 #include "udp_server.h"
 
-#include <iostream>
-#include <string>
-#include <sstream>
-#include <cstring>
+#include <arpa/inet.h>
 #include <cstdlib>
-#include <unistd.h>
+#include <cstring>
+#include <iostream>
 #include <netdb.h>
 #include <netinet/in.h>
-#include <arpa/inet.h>
+#include <sstream>
+#include <string>
+#include <unistd.h>
 
-#include "../common/constants.h"
 #include "../common/commands.h"
+#include "../common/constants.h"
 #include "user.h"
 
 /**
@@ -25,7 +25,8 @@
  * @param client_addr: client address
  * @param addr_len: client address length
  */
-void login(std::string uid, std::string password, int &socket_fd, struct sockaddr_in &client_addr, socklen_t &addr_len) {
+void login(std::string uid, std::string password, int &socket_fd, struct sockaddr_in &client_addr,
+           socklen_t &addr_len) {
     if (!is_user_registered(uid)) {
         add_user(uid, password);
         sendto(socket_fd, "RLI REG\n", 8, 0, (struct sockaddr *)&client_addr, addr_len);
@@ -53,7 +54,8 @@ void login(std::string uid, std::string password, int &socket_fd, struct sockadd
  * @param client_addr: client address
  * @param addr_len: client address length
  */
-void logout(std::string uid, std::string password, int &socket_fd, struct sockaddr_in &client_addr, socklen_t &addr_len) {
+void logout(std::string uid, std::string password, int &socket_fd, struct sockaddr_in &client_addr,
+            socklen_t &addr_len) {
     if (!is_user_registered(uid)) {
         sendto(socket_fd, "RLO UNR\n", 8, 0, (struct sockaddr *)&client_addr, addr_len);
         return;
@@ -90,7 +92,7 @@ void init_udp_server(char *port, int &socket_fd, struct addrinfo &hints, struct 
     }
 
     memset(&hints, 0, sizeof(hints));
-    hints.ai_family = AF_INET; // IPv4
+    hints.ai_family = AF_INET;      // IPv4
     hints.ai_socktype = SOCK_DGRAM; // UDP socket
     hints.ai_flags = AI_PASSIVE;
 
@@ -100,7 +102,7 @@ void init_udp_server(char *port, int &socket_fd, struct addrinfo &hints, struct 
         close(socket_fd);
         exit(EXIT_FAILURE);
     }
-    
+
     error = bind(socket_fd, res->ai_addr, res->ai_addrlen);
     if (error == -1) {
         std::cerr << "Failed to bind socket" << std::endl;
@@ -118,8 +120,8 @@ void init_udp_server(char *port, int &socket_fd, struct addrinfo &hints, struct 
  * @param arg: port
  * @return nullptr
  */
-void* udp_server_thread(void* arg) {
-    char* port = (char*)arg;
+void *udp_server_thread(void *arg) {
+    char *port = (char *)arg;
     int udp_socket_fd;
     struct addrinfo udp_hints, *udp_res;
     struct sockaddr_in client_addr;
@@ -132,22 +134,20 @@ void* udp_server_thread(void* arg) {
     int n;
 
     while (true) {
-        n = recvfrom(udp_socket_fd, buffer, sizeof(buffer) - 1, 0,
-                              (struct sockaddr *)&client_addr, &addr_len);
+        n = recvfrom(udp_socket_fd, buffer, sizeof(buffer) - 1, 0, (struct sockaddr *)&client_addr, &addr_len);
         if (n == -1) {
             std::cerr << "[UDP] Failed to receive message" << std::endl;
             continue;
         }
         buffer[n] = '\0';
         std::string message = std::string(buffer);
-        
+
         const CommandType command_type = get_command_type(message.substr(0, CMD_LENGTH));
         switch (command_type) {
             case LOGIN:
                 if (!is_valid_login_command(message)) {
                     std::cerr << "[UDP] Invalid login command: " << message << std::endl;
-                    n = sendto(udp_socket_fd, "ERR\n", 4, 0,
-                               (struct sockaddr *)&client_addr, addr_len);
+                    n = sendto(udp_socket_fd, "ERR\n", 4, 0, (struct sockaddr *)&client_addr, addr_len);
                     break;
                 }
                 {
@@ -173,12 +173,10 @@ void* udp_server_thread(void* arg) {
             case UNREGISTER:
                 if (!is_valid_unregister_command(message)) {
                     std::cerr << "[UDP] Invalid unregister command: " << message << std::endl;
-                    n = sendto(udp_socket_fd, "ERR\n", 4, 0,
-                               (struct sockaddr *)&client_addr, addr_len);
+                    n = sendto(udp_socket_fd, "ERR\n", 4, 0, (struct sockaddr *)&client_addr, addr_len);
                     break;
                 }
-                n = sendto(udp_socket_fd, "UNR\n", 4, 0,
-                           (struct sockaddr *)&client_addr, addr_len);
+                n = sendto(udp_socket_fd, "UNR\n", 4, 0, (struct sockaddr *)&client_addr, addr_len);
                 if (n == -1) {
                     perror("sendto");
                     exit(1);
@@ -187,12 +185,10 @@ void* udp_server_thread(void* arg) {
             case LIST_MY_EVENTS:
                 if (!is_valid_list_my_events_command(message)) {
                     std::cerr << "[UDP] Invalid list my events command: " << message << std::endl;
-                    n = sendto(udp_socket_fd, "ERR\n", 4, 0,
-                               (struct sockaddr *)&client_addr, addr_len);
+                    n = sendto(udp_socket_fd, "ERR\n", 4, 0, (struct sockaddr *)&client_addr, addr_len);
                     break;
                 }
-                n = sendto(udp_socket_fd, "LME\n", 4, 0,
-                           (struct sockaddr *)&client_addr, addr_len);
+                n = sendto(udp_socket_fd, "LME\n", 4, 0, (struct sockaddr *)&client_addr, addr_len);
                 if (n == -1) {
                     perror("sendto");
                     exit(1);
@@ -201,12 +197,10 @@ void* udp_server_thread(void* arg) {
             case LIST_MY_RESERVATIONS:
                 if (!is_valid_list_my_reservations_command(message)) {
                     std::cerr << "[UDP] Invalid list my reservations command: " << message << std::endl;
-                    n = sendto(udp_socket_fd, "ERR\n", 4, 0,
-                               (struct sockaddr *)&client_addr, addr_len);
+                    n = sendto(udp_socket_fd, "ERR\n", 4, 0, (struct sockaddr *)&client_addr, addr_len);
                     break;
                 }
-                n = sendto(udp_socket_fd, "LMR\n", 4, 0,
-                           (struct sockaddr *)&client_addr, addr_len);
+                n = sendto(udp_socket_fd, "LMR\n", 4, 0, (struct sockaddr *)&client_addr, addr_len);
                 if (n == -1) {
                     perror("sendto");
                     exit(1);
@@ -215,8 +209,7 @@ void* udp_server_thread(void* arg) {
             case INVALID_COMMAND:
             default:
                 std::cerr << "[UDP] Invalid command: " << message << std::endl;
-                n = sendto(udp_socket_fd, "ERR\n", 4, 0,
-                           (struct sockaddr *)&client_addr, addr_len);
+                n = sendto(udp_socket_fd, "ERR\n", 4, 0, (struct sockaddr *)&client_addr, addr_len);
                 if (n == -1) {
                     perror("sendto");
                     exit(1);
@@ -231,4 +224,3 @@ void* udp_server_thread(void* arg) {
     close(udp_socket_fd);
     return nullptr;
 }
-

@@ -1,20 +1,20 @@
-#include <iostream>
-#include <unistd.h>
+#include <cstdbool>
 #include <cstdlib>
 #include <cstring>
-#include <cstdbool>
+#include <iostream>
 #include <pthread.h>
+#include <unistd.h>
 
 #include "tcp_server.h"
 #include "udp_server.h"
 
-/** 
+/**
  * Server port
  * Group 11 + 50000 is the default port for the server.
  */
 char *port = (char *)"58011";
 
-/** 
+/**
  * Verbose mode
  * It outputs to the screen a short description of the received requests
  * (UID, type of request), and the IP and port originating those requests.
