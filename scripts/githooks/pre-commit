@@ -1,0 +1,12 @@
+#!/bin/sh
+#
+# Pre-commit hook to format code before committing
+#
+
+make format
+
+# Add the formatted files back to staging
+git add -u
+
+exit 0
+
