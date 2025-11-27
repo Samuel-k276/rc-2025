@@ -105,5 +105,6 @@ bool is_valid_list_my_reservations_command(std::string message) {
     std::string password;
     ss >> command >> uid >> password;
 
-    return get_command_type(command) == LIST_MY_RESERVATIONS && is_uid_valid(uid) && is_password_valid(password);
+    return get_command_type(command) == 
+    LIST_MY_RESERVATIONS && is_uid_valid(uid) && is_password_valid(password);
 }
