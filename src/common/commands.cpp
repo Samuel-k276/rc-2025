@@ -15,7 +15,7 @@ bool is_valid_command_tcp(std::string command) { return CommandTCPMap.find(comma
 
 bool is_valid_command(std::string command) { return is_valid_command_udp(command) || is_valid_command_tcp(command); }
 
-CommandType get_command_type(std::string  command) {
+CommandType get_command_type(std::string     command) {
     if (command.empty() || command.length() != CMD_LENGTH) {
         return INVALID_COMMAND;
     }
