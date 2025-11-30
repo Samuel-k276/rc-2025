@@ -13,5 +13,7 @@ void *udp_server_thread(void *arg);
 void login(std::string uid, std::string password, int &socket_fd, struct sockaddr_in &client_addr, socklen_t &addr_len);
 void logout(std::string uid, std::string password, int &socket_fd, struct sockaddr_in &client_addr,
             socklen_t &addr_len);
+void unregister(std::string uid, std::string password, int &socket_fd, struct sockaddr_in &client_addr,
+            socklen_t &addr_len);
 
 #endif

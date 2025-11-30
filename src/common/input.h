@@ -23,4 +23,11 @@ bool is_password_valid(std::string password);
  */
 bool is_uid_valid(std::string uid);
 
+/**
+ * Check if a EID is valid.
+ * A valid EID is a string of EID_LENGTH digits.
+ * @param eid: EID
+ * @return bool: true if the EID is valid, false otherwise
+ */
+bool is_eid_valid(std::string eid);
 #endif
