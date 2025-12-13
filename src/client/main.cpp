@@ -81,7 +81,6 @@ int main(int argc, char *argv[]) {
         fgets(buffer, sizeof(buffer), stdin);
         std::string command;
         std::stringstream args = get_command_and_args_with_return(buffer, command);
-
         if (!is_valid_client_command(command)) {
             std::cerr << "Unknown command: " << command << std::endl;
             continue;
@@ -136,6 +135,18 @@ int main(int argc, char *argv[]) {
                 std::cerr << "Unknown command: " << command << std::endl;
                 break;
         }
+        
+
+        // WAITING FOR SERVER RESPONSE
+        addrlen = sizeof(addr);
+        n = recvfrom(socket_fd, buffer, sizeof(buffer), 0, (struct sockaddr *)&addr, &addrlen);
+        if (n == -1) {
+            perror("recvfrom");
+            exit(1);
+        }
+
+        write(1, "Echo from server: ", 18);
+        write(1, buffer, n);
     }
 
     freeaddrinfo(res);

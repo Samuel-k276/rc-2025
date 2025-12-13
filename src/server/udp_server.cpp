@@ -90,23 +90,23 @@ void logout(std::string uid, std::string password, int &socket_fd, struct sockad
 void unregister(std::string uid, std::string password, int &socket_fd, struct sockaddr_in &client_addr,
                 socklen_t &addr_len) {
     if (!is_user_registered(uid)) {
-        sendto(socket_fd, "RLO UNR\n", 8, 0, (struct sockaddr *)&client_addr, addr_len);
+        sendto(socket_fd, "UNR UNR\n", 8, 0, (struct sockaddr *)&client_addr, addr_len);
         return;
     }
 
     if (!is_user_logged_in(uid)) {
-        sendto(socket_fd, "RLO NOK\n", 8, 0, (struct sockaddr *)&client_addr, addr_len);
+        sendto(socket_fd, "UNR NOK\n", 8, 0, (struct sockaddr *)&client_addr, addr_len);
         return;
     }
 
     if (get_user(uid).password != password) {
-        sendto(socket_fd, "RLO WRP\n", 8, 0, (struct sockaddr *)&client_addr, addr_len);
+        sendto(socket_fd, "UNR WRP\n", 8, 0, (struct sockaddr *)&client_addr, addr_len);
         return;
     }
 
     logout_user(uid);
     remove_user(uid);
-    sendto(socket_fd, "RLO OK\n", 7, 0, (struct sockaddr *)&client_addr, addr_len);
+    sendto(socket_fd, "UNR OK\n", 7, 0, (struct sockaddr *)&client_addr, addr_len);
     return;
         
     }
@@ -206,13 +206,17 @@ void *udp_server_thread(void *arg) {
                 }
                 break;
             case UNREGISTER:
-                printf("login case\n");
                 if (!is_valid_unregister_command(message)) {
                     std::cerr << "[UDP] Invalid unregister command: " << message << std::endl;
                     n = sendto(udp_socket_fd, "ERR\n", 4, 0, (struct sockaddr *)&client_addr, addr_len);
                     break;
                 }
-                n = sendto(udp_socket_fd, "UNR\n", 4, 0, (struct sockaddr *)&client_addr, addr_len);
+                {
+                    std::stringstream ss(message);
+                    std::string command, uid, password;
+                    ss >> command >> uid >> password;
+                    unregister(uid,password, udp_socket_fd, client_addr, addr_len);
+                }
                 if (n == -1) {
                     perror("sendto");
                     exit(1);
@@ -252,7 +256,7 @@ void *udp_server_thread(void *arg) {
                 }
                 break;
         }
-
+        message.pop_back();
         std::cout << "[UDP] Received message: " << message << std::endl;
     }
 

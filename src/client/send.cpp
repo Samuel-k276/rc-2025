@@ -13,12 +13,13 @@ bool send_tcp_command(int socket_fd, char *buffer) {
     return false;
 }
 
-bool send_udp_command(int socket_fd, const std::string &message, struct addrinfo *res) {
+bool send_udp_command(int socket_fd, std::string &message, struct addrinfo *res) {
     int n = sendto(socket_fd, message.c_str(), message.length(), 0, res->ai_addr, res->ai_addrlen);
     if (n == -1) {
         std::cerr << "Failed to send UDP command to server" << std::endl;
         return false;
     }
+    message.pop_back();
     std::cout << "Sent UDP command to server: " << message << std::endl;
     return true;
 }

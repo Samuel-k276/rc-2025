@@ -48,8 +48,11 @@ bool is_valid_login_command(std::string message) {
     return true;
 }
 
-bool is_valid_logout_command(std::string message) {
+bool is_valid_logout_command(std::string message) {    
     if (message.empty() || message.length() != CMD_LENGTH + UID_LENGTH + PASSWORD_LENGTH + space_and_newline_length) {
+        if (message.length() == 6) {
+            return true;
+        }
         return false;
     }
 
@@ -64,6 +67,9 @@ bool is_valid_logout_command(std::string message) {
 
 bool is_valid_unregister_command(std::string message) {
     if (message.empty() || message.length() != CMD_LENGTH + UID_LENGTH + PASSWORD_LENGTH + space_and_newline_length) {
+        if (message.length() == 6) {
+            return true;
+        }
         return false;
     }
 

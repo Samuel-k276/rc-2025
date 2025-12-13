@@ -29,7 +29,8 @@ bool parse_login_input(std::stringstream &args, std::string &message) {
 
 // logout doesnt receive arguments, it gets the user id and password from the session
 bool parse_logout_input(std::stringstream &args, std::string &message) {
-    if (!args.eof()) {
+    std::string extra;
+    if (args >> extra) {
         std::cerr << "Invalid logout arguments" << std::endl;
         return false;
     }
@@ -60,7 +61,8 @@ bool parse_change_pass_input(std::stringstream &args, std::string &message) {
 
 // unregister doesnt receive arguments, it gets the user id and password from the session
 bool parse_unregister_input(std::stringstream &args, std::string &message) {
-    if (!args.eof()) {
+    std::string extra;
+    if (args >> extra) {
         std::cerr << "Invalid unregister arguments" << std::endl;
         return false;
     }
