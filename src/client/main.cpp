@@ -119,6 +119,15 @@ int main(int argc, char *argv[]) {
                     std::cerr << "Failed to send unregister command to server" << std::endl;
                 }
                 break;
+            case  MYEVENTS:
+                if(!parse_myevents_input(args, message)) {
+                    std::cerr << "Invalid myevents arguments" << std::endl;
+                    break;
+                }
+                if (!send_udp_command(socket_fd, message, res)) {
+                    std::cerr << "Failed to send myevents command to server" << std::endl;
+                }
+                break;
             case EXIT:
                 if (!parse_exit_input(args)) {
                     std::cerr << "Invalid exit arguments" << std::endl;

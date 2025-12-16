@@ -84,6 +84,9 @@ bool is_valid_unregister_command(std::string message) {
 
 bool is_valid_list_my_events_command(std::string message) {
     if (message.empty() || message.length() != CMD_LENGTH + UID_LENGTH + PASSWORD_LENGTH + space_and_newline_length) {
+        if (message.length() == 6) {
+            return true;
+        }
         return false;
     }
 

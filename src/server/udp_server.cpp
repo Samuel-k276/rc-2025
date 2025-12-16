@@ -111,6 +111,23 @@ void unregister(std::string uid, std::string password, int &socket_fd, struct so
         
     }
 
+void list_my_events(std::string uid_str, std::string password, int &socket_fd, struct sockaddr_in &client_addr,
+                socklen_t &addr_len) {
+
+    if (!is_user_logged_in(uid_str)) {
+        sendto(socket_fd, "RME NLG\n", 8, 0, (struct sockaddr *)&client_addr, addr_len);
+        return;
+    }
+
+    int uid = stoi(uid_str);
+    if (!uid_has_events(uid)) {
+        sendto(socket_fd, "RME NOK\n", 8, 0, (struct sockaddr *)&client_addr, addr_len);
+        return;
+    }
+
+    //TODO:
+    //get_user_events();
+                }
 /**
  * Init UDP server
  * @param port: port
@@ -228,7 +245,12 @@ void *udp_server_thread(void *arg) {
                     n = sendto(udp_socket_fd, "ERR\n", 4, 0, (struct sockaddr *)&client_addr, addr_len);
                     break;
                 }
-                n = sendto(udp_socket_fd, "LME\n", 4, 0, (struct sockaddr *)&client_addr, addr_len);
+                {
+                    std::stringstream ss(message);
+                    std::string command, uid, password;
+                    ss >> command >> uid >> password;
+                    list_my_events(uid,password, udp_socket_fd, client_addr, addr_len);
+                }
                 if (n == -1) {
                     perror("sendto");
                     exit(1);

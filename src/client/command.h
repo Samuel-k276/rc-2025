@@ -115,6 +115,13 @@ bool parse_change_pass_input(std::stringstream &args, std::string &message);
 bool parse_unregister_input(std::stringstream &args, std::string &message);
 
 /**
+ * Parse the myevnts input and return the message in the format "MEE <uid> <password>".
+ * @param args: arguments
+ * @param message: message
+ * @return bool: true if the unregister input is parsed successfully, false otherwise
+ */
+bool parse_myevents_input(std::stringstream &args, std::string &message);
+/**
  * Parse the exit input and return the message in the format "EXT".
  * @param args: arguments
  * @return bool: true if the exit input is parsed successfully, false otherwise

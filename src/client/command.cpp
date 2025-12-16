@@ -23,6 +23,8 @@ bool parse_login_input(std::stringstream &args, std::string &message) {
         std::cerr << "Invalid password: " << password << std::endl;
         return false;
     }
+    set_user_id(uid);
+    set_user_password(password);
     message = command_to_string.at(LOGIN) + " " + uid + " " + password + "\n";
     return true;
 }
@@ -63,12 +65,22 @@ bool parse_change_pass_input(std::stringstream &args, std::string &message) {
 bool parse_unregister_input(std::stringstream &args, std::string &message) {
     std::string extra;
     if (args >> extra) {
-        std::cerr << "Invalid unregister arguments" << std::endl;
         return false;
     }
     std::string uid = get_user_id();
     std::string password = get_user_password();
     message = command_to_string.at(UNREGISTER) + " " + uid + " " + password + "\n";
+    return true;
+}
+
+bool parse_myevents_input(std::stringstream &args, std::string &message) {
+    std::string extra;
+    if (args >> extra) {
+        return false;
+    }
+    std::string uid = get_user_id();
+    std::string password = get_user_password();
+    message = command_to_string.at(MYEVENTS) + " " + uid + " " + password + "\n";
     return true;
 }
 

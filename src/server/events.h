@@ -25,9 +25,10 @@ struct Event {
 };
 
 int new_eid();
-void add_event(int eid); // TODO: Implement the whole event
+int add_event(int uid); // TODO: Implement the whole event
 void remove_event(int eid);
-//Event &get_event(int eid);
-//std::vector<Event*> get_user_events(int eid);
-
+bool event_exist(int eid);
+bool uid_has_events(int uid);
+// TODO:
+//std::vector<Event*> get_user_events(int uid);
 #endif
