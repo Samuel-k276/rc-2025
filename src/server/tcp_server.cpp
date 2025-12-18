@@ -48,49 +48,40 @@ void init_tcp_server(char *port, int &socket_fd, struct addrinfo &hints, struct 
 }
 
 /**
- * TCP server thread
+ * Handle TCP client connection
  * TCP will be used to transfer files with more information to the user application,
  * and managing events and reservations.
- * @param arg: port
- * @return nullptr
+ * Reads message, sends response, and closes connection.
+ * @param client_fd: client file descriptor
  */
-void *tcp_server_thread(void *arg) {
-    char *port = (char *)arg;
-    int tcp_socket_fd;
-    struct addrinfo tcp_hints, *tcp_res;
-    struct sockaddr_in client_addr;
-
-    std::cout << "[TCP] Initializing TCP server on port " << port << std::endl;
-    init_tcp_server(port, tcp_socket_fd, tcp_hints, tcp_res);
-
-    socklen_t addr_len = sizeof(client_addr);
+void handle_tcp_client(int client_fd) {
     char buffer[MAX_MESSAGE_LENGTH];
     int bytes_read;
 
-    while (true) {
-        int client_fd = accept(tcp_socket_fd, (struct sockaddr *)&client_addr, &addr_len);
-        if (client_fd == -1) {
-            std::cerr << "[TCP] Failed to accept connection" << std::endl;
-            continue;
-        }
-
-        bytes_read = read(client_fd, buffer, sizeof(buffer));
-        if (bytes_read == -1) {
-            std::cerr << "[TCP] Failed to read from client" << std::endl;
-            close(client_fd);
-            continue;
-        }
-
-        buffer[bytes_read] = '\0';
-        std::cout << "[TCP] Received message: " << buffer << std::endl;
-        ssize_t  n = write(client_fd, "Message received", 16);
-        if (n < 0){
-            perror("Failed to send message received to client");
-        }
+    bytes_read = read(client_fd, buffer, sizeof(buffer));
+    if (bytes_read == -1) {
+        std::cerr << "[TCP] Failed to read from client" << std::endl;
         close(client_fd);
+        return;
     }
 
-    freeaddrinfo(tcp_res);
-    close(tcp_socket_fd);
-    return nullptr;
+    if (bytes_read == 0) {
+        // Client closed connection before sending data
+        std::cout << "[TCP] Client closed connection (fd: " << client_fd << ")" << std::endl;
+        close(client_fd);
+        return;
+    }
+
+    buffer[bytes_read] = '\0';
+    std::cout << "[TCP] Received message: " << buffer << std::endl;
+    
+    // Send response
+    ssize_t n = write(client_fd, "Message received", 16);
+    if (n < 0) {
+        perror("Failed to send message received to client");
+    }
+    
+    // Close connection after sending response
+    close(client_fd);
+    std::cout << "[TCP] Connection closed (fd: " << client_fd << ")" << std::endl;
 }

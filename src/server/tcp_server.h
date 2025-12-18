@@ -2,10 +2,10 @@
 #define TCP_SERVER_H
 
 #include <netdb.h>
-#include <pthread.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 
-void *tcp_server_thread(void *arg);
+void init_tcp_server(char *port, int &socket_fd, struct addrinfo &hints, struct addrinfo *&res);
+void handle_tcp_client(int client_fd); // Handles request and closes connection
 
 #endif

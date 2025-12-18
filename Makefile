@@ -1,5 +1,5 @@
 CXX := g++
-CXXFLAGS := -Wall -Wextra -std=c++17 -O3 -pthread
+CXXFLAGS := -Wall -Wextra -std=c++17 -O3
 
 SERVER_CPP := $(wildcard src/server/*.cpp)
 CLIENT_CPP := $(wildcard src/client/*.cpp)

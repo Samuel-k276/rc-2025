@@ -3,12 +3,12 @@
 
 #include <netdb.h>
 #include <netinet/in.h>
-#include <pthread.h>
 #include <string>
 #include <sys/socket.h>
 #include <sys/types.h>
 
-void *udp_server_thread(void *arg);
+void init_udp_server(char *port, int &socket_fd, struct addrinfo &hints, struct addrinfo *&res);
+void handle_udp_message(int socket_fd);
 
 void login(std::string uid, std::string password, int &socket_fd, struct sockaddr_in &client_addr, socklen_t &addr_len);
 void logout(std::string uid, std::string password, int &socket_fd, struct sockaddr_in &client_addr,
