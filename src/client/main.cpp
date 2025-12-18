@@ -86,16 +86,34 @@ int main(int argc, char *argv[]) {
         }
 
         UserCommand user_command = get_command(command);
-        std::string message;
+        std::string message, response;
 
         switch (user_command) {
             case LOGIN: {
+                if (is_user_logged_in()) {
+                    std::cerr << "User is already logged in, cannot login again" << std::endl;
+                    break;
+                }
                 if (!parse_login_input(args, message)) {
                     std::cerr << "Invalid login arguments" << std::endl;
                     break;
                 }
-                if (!send_udp_command(UDP_socket_fd, message, res)) {
+                if (!send_udp_command(UDP_socket_fd, message, res, response)) {
                     std::cerr << "Failed to send login command to server" << std::endl;
+                    break;
+                }
+                if (response == "RLI OK\n") {
+                    std::cout << "successful login" << std::endl;
+                    promote_temp_user_to_user();    
+                } else if (response == "RLI REG\n") {
+                    std::cout << "new user registered" << std::endl;
+                    promote_temp_user_to_user();
+                } else if (response == "RLI NOK\n") {
+                    std::cout << "incorrect login attempt" << std::endl;
+                    clear_temp_user_session();
+                } else {
+                    std::cerr << "Unexpected login response: " << response << std::endl;
+                    clear_temp_user_session();
                 }
                 break;
             }
@@ -104,29 +122,65 @@ int main(int argc, char *argv[]) {
                     std::cerr << "Invalid logout arguments" << std::endl;
                     break;
                 }
-                if (!send_udp_command(UDP_socket_fd, message, res)) {
+                std::string response;
+                if (!send_udp_command(UDP_socket_fd, message, res, response)) {
                     std::cerr << "Failed to send logout command to server" << std::endl;
+                    break;
+                }
+                if (response == "RLO OK\n") {
+                    std::cout << "successful logout" << std::endl;
+                    clear_user_session();
+                } else if (response == "RLO UNR\n") {
+                    std::cout << "unknown user" << std::endl;
+                } else if (response == "RLO NOK\n") {
+                    std::cout << "user not logged in" << std::endl;
+                } else {
+                    std::cerr << "Unexpected logout response: " << response << std::endl;
                 }
                 break;
             }
-            case UNREGISTER:
+            case UNREGISTER: {
                 if (!parse_unregister_input(args, message)) {
                     std::cerr << "Invalid unregister arguments" << std::endl;
                     break;
                 }
-                if (!send_udp_command(UDP_socket_fd, message, res)) {
+                if (!send_udp_command(UDP_socket_fd, message, res, response)) {
                     std::cerr << "Failed to send unregister command to server" << std::endl;
+                    break;
+                }
+                if (response == "UNR OK\n") {
+                    std::cout << "successful unregister" << std::endl;
+                    clear_user_session();
+                } else if (response == "UNR UNR\n") {
+                    std::cout << "unknown user" << std::endl;
+                } else if (response == "UNR NOK\n" || response == "UNR WRP\n") {
+                    std::cout << "incorrect unregister attempt" << std::endl;
+                } else {
+                    std::cerr << "Unexpected unregister response: " << response << std::endl;
                 }
                 break;
-            case  MYEVENTS:
+            }
+            case MYEVENTS: {
                 if(!parse_myevents_input(args, message)) {
                     std::cerr << "Invalid myevents arguments" << std::endl;
                     break;
                 }
-                if (!send_udp_command(UDP_socket_fd, message, res)) {
+                if (!send_udp_command(UDP_socket_fd, message, res, response)) {
                     std::cerr << "Failed to send myevents command to server" << std::endl;
+                    break;
+                }
+                if (response == "LME OK\n") {
+                    std::cout << "My events successful" << std::endl;
+                    break;
+                } else if (response == "LME NOK\n") {
+                    std::cerr << "Failed to get my events" << std::endl;
+                    break;
+                } else if (response == "LME ERR\n") {
+                    std::cerr << "Error getting my events" << std::endl;
+                    break;
                 }
                 break;
+            }
             case EXIT:
                 if (!parse_exit_input(args)) {
                     std::cerr << "Invalid exit arguments" << std::endl;

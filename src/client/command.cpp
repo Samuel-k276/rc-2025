@@ -23,9 +23,8 @@ bool parse_login_input(std::stringstream &args, std::string &message) {
         std::cerr << "Invalid password: " << password << std::endl;
         return false;
     }
-        /// FIXME
-    set_user_id(uid);
-    set_user_password(password);
+    set_temp_user_id(uid);
+    set_temp_user_password(password);
     message = command_to_string.at(LOGIN) + " " + uid + " " + password + "\n";
     return true;
 }
@@ -86,9 +85,10 @@ bool parse_myevents_input(std::stringstream &args, std::string &message) {
 }
 
 // exit doesnt receive arguments, it just exits the program if the user is logged out
+// exit\n
 bool parse_exit_input(std::stringstream &args) {
-    if (!args.eof()) {
-        std::cerr << "Invalid exit arguments" << std::endl;
+    std::string extra;
+    if (args >> extra) {
         return false;
     }
     return true;

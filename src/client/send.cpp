@@ -33,7 +33,7 @@ bool send_tcp_command(int socket_fd, std::string &buffer, struct addrinfo *res) 
     return true;
 }
 
-bool send_udp_command(int socket_fd, std::string &message, struct addrinfo *res) {
+bool send_udp_command(int socket_fd, std::string &message, struct addrinfo *res, std::string &response) {
     struct sockaddr_in addr;
 
     int n = sendto(socket_fd, message.c_str(), message.length(), 0, res->ai_addr, res->ai_addrlen);
@@ -45,22 +45,14 @@ bool send_udp_command(int socket_fd, std::string &message, struct addrinfo *res)
     std::cout << "Sent UDP command to server: " << message << std::endl;
 
     socklen_t addrlen = sizeof(addr);
-    char response[4096];
-    n = recvfrom(socket_fd, response, sizeof(response), 0, (struct sockaddr *)&addr, &addrlen);
+    char response_buffer[4096];
+    n = recvfrom(socket_fd, response_buffer, sizeof(response_buffer), 0, (struct sockaddr *)&addr, &addrlen);
     if (n == -1) {
-        perror("recvfrom");
-        exit(1);
+        std::cerr << "Failed to receive UDP command from server" << std::endl;
+        return false;
     }
-
-    n = write(1, "Echo from server: ", 18);
-    if (n == -1) {
-        perror("stdin");
-        exit(1);
-    }
-    n = write(1, response, n);
-    if (n == -1) {
-        perror("buffer");
-        exit(1);
-    }
+    response_buffer[n] = '\0';
+    response = std::string(response_buffer);
+    std::cout << "Received UDP command from server: " << response;
     return true;
 }

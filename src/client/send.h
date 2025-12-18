@@ -22,6 +22,6 @@ bool send_tcp_command(int socket_fd, std::string &buffer, struct addrinfo *res);
  * @param res: address info result
  * @return bool: true if the command is sent successfully, false otherwise
  */
-bool send_udp_command(int socket_fd, std::string &message, struct addrinfo *res);
+bool send_udp_command(int socket_fd, std::string &message, struct addrinfo *res, std::string &response);
 
 #endif

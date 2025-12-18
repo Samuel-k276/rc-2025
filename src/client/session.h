@@ -38,4 +38,31 @@ void set_user_password(std::string password);
  */
 bool is_user_logged_in();
 
+/**
+ * Set the temporary user ID.
+ * @param uid: temporary user ID
+ */
+void set_temp_user_id(std::string uid);
+
+/**
+ * Set the temporary user password.
+ * @param password: temporary user password
+ */
+void set_temp_user_password(std::string password);
+
+/**
+ * Promote the temporary user to the user.
+ */
+void promote_temp_user_to_user();
+
+/**
+ * Clear the temporary user session.
+ */
+void clear_temp_user_session();
+
+/**
+ * Clear the user session.
+ */
+void clear_user_session();
+
 #endif
