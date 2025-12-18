@@ -23,6 +23,7 @@ bool parse_login_input(std::stringstream &args, std::string &message) {
         std::cerr << "Invalid password: " << password << std::endl;
         return false;
     }
+        /// FIXME
     set_user_id(uid);
     set_user_password(password);
     message = command_to_string.at(LOGIN) + " " + uid + " " + password + "\n";

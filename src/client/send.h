@@ -13,7 +13,7 @@
  * @param password: user password
  * @return bool: true if the command is sent successfully, false otherwise
  */
-bool send_tcp_command(int socket_fd, char *buffer);
+bool send_tcp_command(int socket_fd, std::string &buffer, struct addrinfo *res);
 
 /**
  * Uses the open UDP socket to send a command.

@@ -83,7 +83,10 @@ void *tcp_server_thread(void *arg) {
 
         buffer[bytes_read] = '\0';
         std::cout << "[TCP] Received message: " << buffer << std::endl;
-        write(client_fd, "Message received", 16);
+        ssize_t  n = write(client_fd, "Message received", 16);
+        if (n < 0){
+            perror("Failed to send message received to client");
+        }
         close(client_fd);
     }
 

@@ -16,7 +16,6 @@
 #include "send.h"
 #include "session.h"
 
-int socket_fd;
 struct addrinfo hints, *res;
 
 char *ESIP = (char *)"127.0.0.1";
@@ -38,10 +37,7 @@ std::stringstream get_command_and_args_with_return(char *buffer, std::string &co
 
 int main(int argc, char *argv[]) {
     int opt;
-    ssize_t n;
-    socklen_t addrlen;
     struct addrinfo hints, *res;
-    struct sockaddr_in addr;
     char buffer[MAX_MESSAGE_LENGTH];
     while ((opt = getopt(argc, argv, "n:p:")) != -1) {
         switch (opt) {
@@ -59,9 +55,9 @@ int main(int argc, char *argv[]) {
 
     std::cout << "Connecting to server at " << ESIP << ":" << ESport << std::endl;
 
-    // socket_fd = socket(AF_INET, SOCK_STREAM, 0); TCP
-    socket_fd = socket(AF_INET, SOCK_DGRAM, 0);
-    if (socket_fd == -1) {
+    int TCP_socket_fd = socket(AF_INET, SOCK_STREAM, 0);
+    int UDP_socket_fd = socket(AF_INET, SOCK_DGRAM, 0);
+    if (UDP_socket_fd == -1 || TCP_socket_fd == -1 ) {
         std::cerr << "Failed to create socket" << std::endl;
         exit(EXIT_FAILURE);
     }
@@ -78,7 +74,10 @@ int main(int argc, char *argv[]) {
     }
 
     while (true) {
-        fgets(buffer, sizeof(buffer), stdin);
+        if (fgets(buffer, sizeof(buffer), stdin) == NULL) {
+            std::cout << "Input ended. Exiting." << std::endl;
+        break; 
+        }
         std::string command;
         std::stringstream args = get_command_and_args_with_return(buffer, command);
         if (!is_valid_client_command(command)) {
@@ -95,7 +94,7 @@ int main(int argc, char *argv[]) {
                     std::cerr << "Invalid login arguments" << std::endl;
                     break;
                 }
-                if (!send_udp_command(socket_fd, message, res)) {
+                if (!send_udp_command(UDP_socket_fd, message, res)) {
                     std::cerr << "Failed to send login command to server" << std::endl;
                 }
                 break;
@@ -105,7 +104,7 @@ int main(int argc, char *argv[]) {
                     std::cerr << "Invalid logout arguments" << std::endl;
                     break;
                 }
-                if (!send_udp_command(socket_fd, message, res)) {
+                if (!send_udp_command(UDP_socket_fd, message, res)) {
                     std::cerr << "Failed to send logout command to server" << std::endl;
                 }
                 break;
@@ -115,7 +114,7 @@ int main(int argc, char *argv[]) {
                     std::cerr << "Invalid unregister arguments" << std::endl;
                     break;
                 }
-                if (!send_udp_command(socket_fd, message, res)) {
+                if (!send_udp_command(UDP_socket_fd, message, res)) {
                     std::cerr << "Failed to send unregister command to server" << std::endl;
                 }
                 break;
@@ -124,7 +123,7 @@ int main(int argc, char *argv[]) {
                     std::cerr << "Invalid myevents arguments" << std::endl;
                     break;
                 }
-                if (!send_udp_command(socket_fd, message, res)) {
+                if (!send_udp_command(UDP_socket_fd, message, res)) {
                     std::cerr << "Failed to send myevents command to server" << std::endl;
                 }
                 break;
@@ -140,25 +139,27 @@ int main(int argc, char *argv[]) {
                 std::cout << "Exiting program" << std::endl;
                 exit(EXIT_SUCCESS);
                 break;
+            case CREATE_EVENT:
+                break;
+            case CLOSE_EVENT:
+                break;
+            case LIST_EVENTS:
+                break;
+            case SHOW_EVENT_DETAILS:
+                break;
+            case RESERVE:
+                break;
+            case CHANGE_PASS:
+                break;
             default:
                 std::cerr << "Unknown command: " << command << std::endl;
                 break;
         }
-        
 
-        // WAITING FOR SERVER RESPONSE
-        addrlen = sizeof(addr);
-        n = recvfrom(socket_fd, buffer, sizeof(buffer), 0, (struct sockaddr *)&addr, &addrlen);
-        if (n == -1) {
-            perror("recvfrom");
-            exit(1);
-        }
 
-        write(1, "Echo from server: ", 18);
-        write(1, buffer, n);
     }
 
     freeaddrinfo(res);
-    close(socket_fd);
+    close(UDP_socket_fd);
     return 0;
 }

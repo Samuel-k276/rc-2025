@@ -111,7 +111,7 @@ void unregister(std::string uid, std::string password, int &socket_fd, struct so
         
     }
 
-void list_my_events(std::string uid_str, std::string password, int &socket_fd, struct sockaddr_in &client_addr,
+void list_my_events(std::string uid_str, int &socket_fd, struct sockaddr_in &client_addr,
                 socklen_t &addr_len) {
 
     if (!is_user_logged_in(uid_str)) {
@@ -249,7 +249,7 @@ void *udp_server_thread(void *arg) {
                     std::stringstream ss(message);
                     std::string command, uid, password;
                     ss >> command >> uid >> password;
-                    list_my_events(uid,password, udp_socket_fd, client_addr, addr_len);
+                    list_my_events(uid, udp_socket_fd, client_addr, addr_len);
                 }
                 if (n == -1) {
                     perror("sendto");

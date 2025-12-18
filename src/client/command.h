@@ -15,9 +15,9 @@ enum UserCommand {
     MYRESERVATIONS,
     // Event Management
     CREATE_EVENT,
-    CLOSE,
-    LIST,
-    SHOW,
+    CLOSE_EVENT,
+    LIST_EVENTS,
+    SHOW_EVENT_DETAILS,
     // Reservations
     RESERVE,
     // System
@@ -38,9 +38,9 @@ const std::unordered_map<std::string, UserCommand> user_commands = {
     {"myr", MYRESERVATIONS},
     // Event Management
     {"create", CREATE_EVENT},
-    {"close", CLOSE},
-    {"list", LIST},
-    {"show", SHOW},
+    {"close", CLOSE_EVENT},
+    {"list", LIST_EVENTS},
+    {"show", SHOW_EVENT_DETAILS},
     // Reservations
     {"reserve", RESERVE},
     // System
@@ -59,9 +59,9 @@ const std::unordered_map<UserCommand, std::string> command_to_string = {
     {MYRESERVATIONS, "LMR"},
     // Event Management
     {CREATE_EVENT, "CRE"},
-    {CLOSE, "CLS"},
-    {LIST, "LST"},
-    {SHOW, "SED"},
+    {CLOSE_EVENT, "CLS"},
+    {LIST_EVENTS, "LST"},
+    {SHOW_EVENT_DETAILS, "SED"},
     // Reservations
     {RESERVE, "RID"},
     // System
