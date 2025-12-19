@@ -37,14 +37,11 @@ void create(std::string uid, std::string password, std::string name, std::string
 
     std::string message = add_event(uid, name, fname, event_date, stoi(attendance_size));
 
-    // Extract EID from response message (format: "RCE OK 001")
     std::istringstream iss(message);
     std::string status, ok, eid_str;
     iss >> status >> ok >> eid_str;
     int eid = std::stoi(eid_str);
 
-    // Save event description file
-    // fdata is passed as parameter and may contain binary data
     save_event_description_file(eid, fname, fdata);
 
     send(client_fd, message.c_str(), message.length(), 0);
@@ -93,6 +90,33 @@ void list(int client_fd) {
         return;
     }
     std::string message = list_events();
+    send(client_fd, message.c_str(), message.length(), 0);
+    return;
+}
+
+void show_event_details(int eid, int client_fd) {
+    if (!event_exist(eid)) {
+        send(client_fd, "RSE NOK\n", 8, 0);
+        return;
+    }
+
+    Event e = load_event_from_disk(eid);
+    if (e.owner_uid.empty()) {
+        send(client_fd, "RSE NOK\n", 8, 0);
+        return;
+    }
+
+    std::string fdata = load_event_description_file(eid, e.file_name);
+    if (fdata.empty()) {
+        send(client_fd, "RSE NOK\n", 8, 0);
+        return;
+    }
+
+    std::string fsize = std::to_string(fdata.length());
+    std::string message = "RSE OK " + e.owner_uid + " " + e.name + " " + e.date_time + " " +
+                          std::to_string(e.total_seats) + " " + std::to_string(e.reserved_seats) + " " +
+                          e.file_name + " " + fsize + " " + fdata + "\n";
+    
     send(client_fd, message.c_str(), message.length(), 0);
     return;
 }
@@ -155,15 +179,15 @@ void change_pass(std::string uid, std::string old_password, std::string new_pass
 }
 
 void init_tcp_server(char *port, int &socket_fd, struct addrinfo &hints, struct addrinfo *&res) {
-    socket_fd = socket(AF_INET, SOCK_STREAM, 0); // TCP socket
+    socket_fd = socket(AF_INET, SOCK_STREAM, 0);
     if (socket_fd == -1) {
         std::cerr << "Failed to create socket" << std::endl;
         exit(EXIT_FAILURE);
     }
 
     memset(&hints, 0, sizeof(hints));
-    hints.ai_family = AF_INET;       // IPv4
-    hints.ai_socktype = SOCK_STREAM; // TCP socket
+    hints.ai_family = AF_INET;
+    hints.ai_socktype = SOCK_STREAM;
     hints.ai_flags = AI_PASSIVE;
 
     int error = getaddrinfo(NULL, port, &hints, &res);
@@ -192,13 +216,6 @@ void init_tcp_server(char *port, int &socket_fd, struct addrinfo &hints, struct 
     return;
 }
 
-/**
- * Handle TCP client connection
- * TCP will be used to transfer files with more information to the user application,
- * and managing events and reservations.
- * Reads message, sends response, and closes connection.
- * @param client_fd: client file descriptor
- */
 void handle_tcp_client(int client_fd) {
     char buffer[MAX_MESSAGE_LENGTH];
     int bytes_read;
@@ -220,7 +237,6 @@ void handle_tcp_client(int client_fd) {
     buffer[bytes_read] = '\0';
     std::string message = std::string(buffer);
     
-    // Remove trailing newline and whitespace for logging
     while (!message.empty() && (message.back() == '\n' || message.back() == '\r' || message.back() == ' ')) {
         message.pop_back();
     }
@@ -256,8 +272,16 @@ void handle_tcp_client(int client_fd) {
             }
             list(client_fd);
             break;
-        case SHOW_EVENT_DETAILS:
+        case SHOW_EVENT_DETAILS: {
+            std::string eid;
+            if (!parse_show_event_details_command(message, eid)) {
+                std::cerr << "[TCP] Invalid show event details command: " << message << std::endl;
+                send(client_fd, "ERR\n", 4, 0);
+                break;
+            }
+            show_event_details(stoi(eid), client_fd);
             break;
+        }
         case RESERVE: {
             std::string uid, password, eid, number_of_people;
             if (!parse_reserve_command(message, uid, password, eid, number_of_people)) {
@@ -284,11 +308,7 @@ void handle_tcp_client(int client_fd) {
             break;
     }
 
-    // Shutdown write side to signal that we're done sending
-    // This allows the client to detect EOF and close gracefully
     shutdown(client_fd, SHUT_WR);
-    
-    // Close connection after sending response
     close(client_fd);
     std::cout << "[TCP] Connection closed (fd: " << client_fd << ")" << std::endl;
 }

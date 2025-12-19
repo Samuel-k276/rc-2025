@@ -151,7 +151,6 @@ bool parse_create_command(std::string message, std::string &uid, std::string &pa
     std::string date, time;
     ss >> command >> uid >> password >> name >> date >> time >> attendance_size >> fname >> fsize;
     
-    // Join date and time with space
     event_date = date + " " + time;
 
     if (get_command_type(command) != CREATE_EVENT) {
@@ -187,20 +186,16 @@ bool parse_create_command(std::string message, std::string &uid, std::string &pa
         return false;
     }
 
-    // Read the rest of the message as fdata (may contain spaces or binary data)
-    // Find position after fname and fsize by searching for the pattern "fname fsize "
     std::string fname_fsize_pattern = fname + " " + fsize + " ";
     size_t pattern_pos = message.find(fname_fsize_pattern);
     if (pattern_pos != std::string::npos) {
         size_t fdata_start = pattern_pos + fname_fsize_pattern.length();
-        // Read until newline (if present)
         size_t fdata_end = message.find('\n', fdata_start);
         if (fdata_end == std::string::npos) {
             fdata_end = message.length();
         }
         fdata = message.substr(fdata_start, fdata_end - fdata_start);
     } else {
-        // Fallback: try to find fsize after fname
         size_t fname_pos = message.find(fname);
         if (fname_pos != std::string::npos) {
             size_t search_start = fname_pos + fname.length();
@@ -266,6 +261,27 @@ bool parse_list_command(std::string message) {
 
     if (ss >> extra) {
         std::cerr << "Invalid list, no extra arguments" << std::endl;
+        return false;
+    }
+
+    return true;
+}
+
+bool parse_show_event_details_command(std::string message, std::string &eid) {
+    if (message.empty()) {
+        return false;
+    }
+
+    std::stringstream ss(message);
+    std::string command;
+    ss >> command >> eid;
+
+    if (get_command_type(command) != SHOW_EVENT_DETAILS) {
+        return false;
+    }
+
+    if (!is_eid_valid(eid)) {
+        std::cerr << "Invalid event ID: " << eid << std::endl;
         return false;
     }
 

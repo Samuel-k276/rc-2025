@@ -33,7 +33,6 @@ bool parse_login_input(std::stringstream &args, std::string &message) {
     return true;
 }
 
-// logout doesnt receive arguments, it gets the user id and password from the session
 bool parse_logout_input(std::stringstream &args, std::string &message) {
     std::string extra;
     if (args >> extra) {
@@ -46,7 +45,6 @@ bool parse_logout_input(std::stringstream &args, std::string &message) {
     return true;
 }
 
-// unregister doesnt receive arguments, it gets the user id and password from the session
 bool parse_unregister_input(std::stringstream &args, std::string &message) {
     std::string extra;
     if (args >> extra) {
@@ -71,8 +69,6 @@ bool parse_myevents_input(std::stringstream &args, std::string &message) {
     return true;
 }
 
-// exit doesnt receive arguments, it just exits the program if the user is logged out
-// exit\n
 bool parse_exit_input(std::stringstream &args) {
     std::string extra;
     if (args >> extra) {
@@ -87,9 +83,6 @@ bool is_valid_num_attendees(std::string num_attendees) {
     return num >= 10 && num <= 999;
 }
 
-// get the file data and size from the file
-// event_fname can contain a path, but Fname should only contain the filename
-// Returns true if successful, false otherwise
 bool get_file_data(std::string event_fname, std::string &Fdata, std::string &Fsize, std::string &Fname) {
     std::ifstream file(event_fname);
     if (!file.is_open()) {
@@ -97,11 +90,9 @@ bool get_file_data(std::string event_fname, std::string &Fdata, std::string &Fsi
         return false;
     }
 
-    // Extract only the filename (without path)
     std::filesystem::path path(event_fname);
     Fname = path.filename().string();
 
-    // Check file size (maximum size is 10 MB = 10.106 bytes)
     auto file_size = std::filesystem::file_size(event_fname);
     if (file_size > MAX_FILE_SIZE) {
         std::cerr << "File size exceeds maximum allowed size (10 MB): " << file_size << " bytes" << std::endl;
@@ -109,7 +100,6 @@ bool get_file_data(std::string event_fname, std::string &Fdata, std::string &Fsi
         return false;
     }
 
-    // Read file data
     Fdata.resize(file_size);
     file.read(Fdata.data(), file_size);
     Fsize = std::to_string(file_size);
@@ -117,7 +107,6 @@ bool get_file_data(std::string event_fname, std::string &Fdata, std::string &Fsi
     return true;
 }
 
-// CRE UID password name event_date attendance_size Fname Fsize Fdata
 bool parse_create_event_input(std::stringstream &args, std::string &message) {
     std::string name, event_fname, date, time, num_attendees;
     if (!(args >> name >> event_fname >> date >> time >> num_attendees)) {

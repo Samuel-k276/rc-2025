@@ -14,14 +14,12 @@
 #include <unistd.h>
 #include <vector>
 
-// Helper function to create directory and parents if needed
 static void create_directory_recursive(const std::string &path) {
     struct stat st;
     if (stat(path.c_str(), &st) == 0) {
-        return; // Directory already exists
+        return;
     }
 
-    // Create parent directories first
     size_t pos = path.find_last_of('/');
     if (pos != std::string::npos) {
         std::string parent = path.substr(0, pos);
@@ -31,16 +29,13 @@ static void create_directory_recursive(const std::string &path) {
     mkdir(path.c_str(), 0700);
 }
 
-// Initialize storage directories
 void init_storage() {
-    // Create storage base directories
     create_directory_recursive("src/server/storage/USERS");
     create_directory_recursive("src/server/storage/EVENTS");
 
     std::cout << "Storage directories initialized at src/server/storage/" << std::endl;
 }
 
-// Get current datetime in format DD-MM-YYYY HH:MM:SS
 std::string get_current_datetime() {
     auto now = std::chrono::system_clock::now();
     std::time_t t = std::chrono::system_clock::to_time_t(now);
@@ -51,16 +46,13 @@ std::string get_current_datetime() {
     return std::string(buf);
 }
 
-// Format EID as 3-digit string (001, 002, etc.)
 std::string format_eid(int eid) {
     std::ostringstream oss;
     oss << std::setw(3) << std::setfill('0') << eid;
     return oss.str();
 }
 
-// User persistence functions
 void save_user_password(const std::string &uid, const std::string &password) {
-    // Create user directory if it doesn't exist
     std::string user_dir = "src/server/storage/USERS/" + uid;
     struct stat st;
     if (stat(user_dir.c_str(), &st) != 0) {
@@ -134,13 +126,11 @@ void create_event_directory(int eid) {
         mkdir(event_dir.c_str(), 0700);
     }
 
-    // Create RESERVATIONS subdirectory
     std::string reserv_dir = event_dir + "/RESERVATIONS";
     if (stat(reserv_dir.c_str(), &st) != 0) {
         mkdir(reserv_dir.c_str(), 0700);
     }
 
-    // Create DESCRIPTION subdirectory
     std::string desc_dir = event_dir + "/DESCRIPTION";
     if (stat(desc_dir.c_str(), &st) != 0) {
         mkdir(desc_dir.c_str(), 0700);
@@ -177,11 +167,22 @@ void save_event_description_file(int eid, const std::string &fname, const std::s
 
     std::ofstream file(desc_file, std::ios::binary);
     if (file.is_open()) {
-        // fdata might contain binary data, so we need to handle it properly
-        // For now, assuming it's base64 or text
         file << fdata;
         file.close();
     }
+}
+
+std::string load_event_description_file(int eid, const std::string &fname) {
+    std::string eid_str = format_eid(eid);
+    std::string desc_file = "src/server/storage/EVENTS/" + eid_str + "/DESCRIPTION/" + fname;
+
+    std::ifstream file(desc_file, std::ios::binary);
+    if (file.is_open()) {
+        std::string fdata((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+        file.close();
+        return fdata;
+    }
+    return "";
 }
 
 void save_event_end(int eid, const std::string &end_datetime) {
@@ -212,7 +213,7 @@ void add_event_to_user_created(int eid, const std::string &uid) {
 
     std::ofstream file(created_file);
     if (file.is_open()) {
-        file << eid_str; // Just create the file, content doesn't matter
+        file << eid_str;
         file.close();
     }
 }
@@ -252,9 +253,7 @@ std::string load_event_start_info(int eid) {
     return "";
 }
 
-// Reservation persistence functions
 void save_reservation(int eid, const std::string &uid, int res_num, const std::string &res_datetime) {
-    // Get current time for filename
     auto now = std::chrono::system_clock::now();
     std::time_t t = std::chrono::system_clock::to_time_t(now);
     std::tm tm = *std::localtime(&t);
@@ -268,7 +267,6 @@ void save_reservation(int eid, const std::string &uid, int res_num, const std::s
     std::string eid_str = format_eid(eid);
     std::string reserv_filename = "R-" + uid + "-" + std::string(date_buf) + "_" + std::string(time_buf) + ".txt";
 
-    // Save in event's RESERVATIONS directory
     std::string reserv_file = "src/server/storage/EVENTS/" + eid_str + "/RESERVATIONS/" + reserv_filename;
     std::ofstream file(reserv_file);
     if (file.is_open()) {
@@ -276,7 +274,6 @@ void save_reservation(int eid, const std::string &uid, int res_num, const std::s
         file.close();
     }
 
-    // Also save in user's RESERVED directory
     add_reservation_to_user_reserved(uid, eid, res_num, res_datetime);
 }
 
@@ -293,7 +290,6 @@ void add_reservation_to_user_reserved(const std::string &uid, int /* eid */, int
         mkdir(reserved_dir.c_str(), 0700);
     }
 
-    // Get current time for filename
     auto now = std::chrono::system_clock::now();
     std::time_t t = std::chrono::system_clock::to_time_t(now);
     std::tm tm = *std::localtime(&t);
@@ -314,12 +310,8 @@ void add_reservation_to_user_reserved(const std::string &uid, int /* eid */, int
     }
 }
 
-// Check if event has expired and close it if needed
-// Note: This function is kept for compatibility but the actual checking
-// is done in events.cpp::get_event_status()
 bool check_and_close_expired_event(int eid) { return event_end_exists(eid); }
 
-// Check if event exists on disk
 bool event_exists(int eid) {
     std::string eid_str = format_eid(eid);
     std::string start_file = "src/server/storage/EVENTS/" + eid_str + "/START_" + eid_str + ".txt";
@@ -327,7 +319,6 @@ bool event_exists(int eid) {
     return stat(start_file.c_str(), &st) == 0;
 }
 
-// Find next available EID by scanning EVENTS directory
 int find_next_available_eid() {
     int max_eid = 0;
     DIR *events_dir = opendir("src/server/storage/EVENTS");
@@ -342,7 +333,6 @@ int find_next_available_eid() {
                     max_eid = eid;
                 }
             } catch (...) {
-                // Skip invalid entries
             }
         }
         closedir(events_dir);
@@ -350,7 +340,6 @@ int find_next_available_eid() {
     return max_eid + 1;
 }
 
-// Get all event IDs from disk
 std::vector<int> get_all_event_ids() {
     std::vector<int> eids;
     DIR *events_dir = opendir("src/server/storage/EVENTS");
@@ -365,7 +354,6 @@ std::vector<int> get_all_event_ids() {
                     eids.push_back(eid);
                 }
             } catch (...) {
-                // Skip invalid entries
             }
         }
         closedir(events_dir);
@@ -374,7 +362,6 @@ std::vector<int> get_all_event_ids() {
     return eids;
 }
 
-// Parse event START file info
 bool parse_event_start_info(const std::string &info, std::string &uid, std::string &name, std::string &desc_fname,
                             int &event_attend, std::string &date_time) {
     std::istringstream ss(info);
@@ -388,7 +375,6 @@ bool parse_event_start_info(const std::string &info, std::string &uid, std::stri
     return true;
 }
 
-// Get all events created by a user
 std::vector<int> get_user_created_events(const std::string &uid) {
     std::vector<int> eids;
     std::string created_dir = "src/server/storage/USERS/" + uid + "/CREATED";
@@ -399,7 +385,6 @@ std::vector<int> get_user_created_events(const std::string &uid) {
         while ((entry = readdir(dir)) != nullptr) {
             if (entry->d_name[0] == '.') continue;
 
-            // Extract EID from filename (format: 001.txt)
             std::string filename = entry->d_name;
             size_t dot_pos = filename.find('.');
             if (dot_pos != std::string::npos) {
@@ -410,7 +395,6 @@ std::vector<int> get_user_created_events(const std::string &uid) {
                         eids.push_back(eid);
                     }
                 } catch (...) {
-                    // Skip invalid entries
                 }
             }
         }
@@ -420,7 +404,6 @@ std::vector<int> get_user_created_events(const std::string &uid) {
     return eids;
 }
 
-// Get user reservations from disk
 std::vector<std::tuple<int, std::string, int>> get_user_reservations_from_disk(const std::string &uid) {
     std::vector<std::tuple<int, std::string, int>> reservations;
     std::string reserved_dir = "src/server/storage/USERS/" + uid + "/RESERVED";
@@ -435,19 +418,14 @@ std::vector<std::tuple<int, std::string, int>> get_user_reservations_from_disk(c
             if (entry->d_name[0] == '.') continue;
 
             std::string filename = entry->d_name;
-            // Format: R-uid-date_time.txt
-            // Content format: UID res_num res_datetime (where res_datetime is "DD-MM-YYYY HH:MM:SS")
             std::string reserv_file = reserved_dir + "/" + filename;
             std::ifstream file(reserv_file);
             if (file.is_open()) {
                 std::string uid_from_file, date_part, time_part, res_datetime;
                 int res_num;
-                // Read UID, res_num, date part, and time part
                 if (file >> uid_from_file >> res_num >> date_part >> time_part) {
                     res_datetime = date_part + " " + time_part;
 
-                    // Find which event this reservation belongs to
-                    // by checking all events' RESERVATIONS directories
                     for (int eid : all_eids) {
                         std::string eid_str = format_eid(eid);
                         std::string event_reserv_file =
@@ -463,9 +441,6 @@ std::vector<std::tuple<int, std::string, int>> get_user_reservations_from_disk(c
             }
         }
         closedir(dir);
-
-        // Sort by datetime (most recent first would require parsing, so we'll keep insertion order)
-        // The filesystem should already provide some ordering, but we can sort if needed
     }
     return reservations;
 }

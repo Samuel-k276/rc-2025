@@ -23,6 +23,7 @@ void save_event_start(int eid, const std::string &uid, const std::string &name, 
                       int event_attend, const std::string &start_date, const std::string &start_time);
 void save_event_res_file(int eid, int reserved_seats);
 void save_event_description_file(int eid, const std::string &fname, const std::string &fdata);
+std::string load_event_description_file(int eid, const std::string &fname);
 void save_event_end(int eid, const std::string &end_datetime);
 void add_event_to_user_created(int eid, const std::string &uid);
 bool event_end_exists(int eid);

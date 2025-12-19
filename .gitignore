@@ -62,3 +62,6 @@ build/
 
 # Storage files
 src/server/storage/*
+
+# Test scripts
+SCRIPTS_25-26/*

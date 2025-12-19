@@ -87,6 +87,14 @@ bool parse_close_command(std::string message, std::string &uid, std::string &pas
 bool parse_list_command(std::string message);
 
 /**
+ * Parse and validate show event details command: "SED <eid>"
+ * @param message: message to parse
+ * @param eid: output parameter for event ID
+ * @return bool: true if valid, false otherwise
+ */
+bool parse_show_event_details_command(std::string message, std::string &eid);
+
+/**
  * Parse and validate reserve command: "RID <uid> <password> <eid> <number_of_people>"
  * @param message: message to parse
  * @param uid: output parameter for UID

@@ -28,6 +28,7 @@ std::string add_event(std::string uid, std::string name, std::string file_name, 
 bool event_exist(int eid);
 bool uid_has_events(std::string uid);
 std::string get_user_events(std::string uid);
+Event load_event_from_disk(int eid);
 Event *get_event(int eid);
 int get_event_status(int eid);
 bool owner_of_event(std::string uid, int eid);

@@ -4,6 +4,7 @@
 #include <fstream>
 #include <iostream>
 #include <sstream>
+#include <unistd.h>
 
 void handle_login_response(const std::string &response) {
     if (response.substr(0, 7) == "RLI OK\n") {
@@ -234,34 +235,70 @@ void handle_list_events_response(const std::string &response) {
 void handle_show_event_details_response(const std::string &response) {
     if (response.substr(0, 7) == "RSE OK ") {
         // Parse response: RSE OK UID name event_date attendance_size Seats_reserved Fname Fsize Fdata
+        // Note: event_date contains space (format: "dd-mm-yyyy hh:mm")
         std::stringstream ss(response);
-        std::string status, uid, name, event_date, attendance_size, seats_reserved, fname, fsize;
-        ss >> status >> status; // RSE OK
-        ss >> uid >> name >> event_date >> attendance_size >> seats_reserved >> fname >> fsize;
+        std::string status, ok, uid, name, date_part, time_part, attendance_size, seats_reserved, fname, fsize;
+        ss >> status >> ok; // RSE OK
+        ss >> uid >> name >> date_part >> time_part >> attendance_size >> seats_reserved >> fname >> fsize;
+        
+        std::string event_date = date_part + " " + time_part;
 
-        // Extract file data (rest of the response)
+        // Extract file data (rest of the response after fsize)
+        // Find position after "fname fsize " pattern to avoid finding fsize elsewhere
+        std::string fname_fsize_pattern = fname + " " + fsize + " ";
+        size_t pattern_pos = response.find(fname_fsize_pattern);
         std::string fdata;
-        std::getline(ss, fdata);
-        // Remove leading space if present
-        if (!fdata.empty() && fdata[0] == ' ') {
-            fdata = fdata.substr(1);
+        if (pattern_pos != std::string::npos) {
+            size_t fdata_start = pattern_pos + fname_fsize_pattern.length();
+            // Read until newline (if present)
+            size_t fdata_end = response.find('\n', fdata_start);
+            if (fdata_end == std::string::npos) {
+                fdata_end = response.length();
+            }
+            fdata = response.substr(fdata_start, fdata_end - fdata_start);
+        } else {
+            // Fallback: try to find fsize after fname
+            size_t fname_pos = response.find(fname);
+            if (fname_pos != std::string::npos) {
+                size_t search_start = fname_pos + fname.length();
+                size_t fsize_pos = response.find(" " + fsize + " ", search_start);
+                if (fsize_pos != std::string::npos) {
+                    size_t fdata_start = fsize_pos + fsize.length() + 2; // +2 for " " and " "
+                    size_t fdata_end = response.find('\n', fdata_start);
+                    if (fdata_end == std::string::npos) {
+                        fdata_end = response.length();
+                    }
+                    fdata = response.substr(fdata_start, fdata_end - fdata_start);
+                }
+            }
         }
 
-        // Display event details
-        std::cout << "Event Details:" << std::endl;
-        std::cout << "  Owner UID: " << uid << std::endl;
-        std::cout << "  Name: " << name << std::endl;
-        std::cout << "  Date: " << event_date << std::endl;
-        std::cout << "  Total Seats: " << attendance_size << std::endl;
-        std::cout << "  Reserved Seats: " << seats_reserved << std::endl;
-        std::cout << "  File: " << fname << " (" << fsize << " bytes)" << std::endl;
+        // Determine event status: sold-out if reserved >= total
+        int reserved = std::stoi(seats_reserved);
+        int total = std::stoi(attendance_size);
+        std::string status_info = "";
+        if (reserved >= total && total > 0) {
+            status_info = " (sold-out)";
+        }
+        // Note: We can't determine if event is closed from the response alone
+        // The server would need to include this info, but for now we only show sold-out
 
-        // Save file locally
+        // Display event details: UID name event_date attendance_size Seats_reserved [status]
+        std::cout << uid << " " << name << " " << event_date << " " << attendance_size << " " 
+                  << seats_reserved << status_info << std::endl;
+
+        // Save file locally and display file info
         std::ofstream file(fname, std::ios::binary);
         if (file.is_open()) {
             file.write(fdata.c_str(), fdata.length());
             file.close();
-            std::cout << "File saved: " << fname << std::endl;
+            // Get current directory for display
+            char cwd[1024];
+            if (getcwd(cwd, sizeof(cwd)) != nullptr) {
+                std::cout << fname << " " << fsize << " " << cwd << "/" << fname << std::endl;
+            } else {
+                std::cout << fname << " " << fsize << " " << fname << std::endl;
+            }
         } else {
             std::cerr << "Failed to save file: " << fname << std::endl;
         }
@@ -275,7 +312,7 @@ void handle_show_event_details_response(const std::string &response) {
 }
 
 void handle_reserve_response(const std::string &response) {
-    if (response.substr(0, 7) == "PRI ACC\n") {
+    if (response.substr(0, 8) == "PRI ACC\n") {
         std::cout << "accepted" << std::endl;
     } else if (response.substr(0, 8) == "PRI REJ\n") {
         std::cout << "refused" << std::endl;
