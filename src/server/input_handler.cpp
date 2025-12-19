@@ -1,7 +1,7 @@
 #include "input_handler.h"
-#include "../common/input.h"
-#include "../common/constants.h"
 #include "../common/commands.h"
+#include "../common/constants.h"
+#include "../common/input.h"
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -139,9 +139,9 @@ bool parse_list_my_reservations_command(std::string message, std::string &uid, s
     return true;
 }
 
-bool parse_create_command(std::string message, std::string &uid, std::string &password,
-                          std::string &name, std::string &event_date, std::string &attendance_size,
-                          std::string &fname, std::string &fsize, std::string &fdata) {
+bool parse_create_command(std::string message, std::string &uid, std::string &password, std::string &name,
+                          std::string &event_date, std::string &attendance_size, std::string &fname, std::string &fsize,
+                          std::string &fdata) {
     if (message.empty()) {
         return false;
     }
@@ -254,8 +254,8 @@ bool parse_list_command(std::string message) {
     return true;
 }
 
-bool parse_reserve_command(std::string message, std::string &uid, std::string &password,
-                           std::string &eid, std::string &number_of_people) {
+bool parse_reserve_command(std::string message, std::string &uid, std::string &password, std::string &eid,
+                           std::string &number_of_people) {
     if (message.empty()) {
         return false;
     }
@@ -284,14 +284,15 @@ bool parse_reserve_command(std::string message, std::string &uid, std::string &p
     return true;
 }
 
-bool parse_change_pass_command(std::string message, std::string &uid, std::string &old_password, std::string &new_password) {
+bool parse_change_pass_command(std::string message, std::string &uid, std::string &old_password,
+                               std::string &new_password) {
     if (message.empty()) {
         return false;
     }
 
     std::stringstream ss(message);
     std::string command;
-    
+
     if (!(ss >> command >> uid >> old_password >> new_password)) {
         return false;
     }
@@ -315,4 +316,3 @@ bool parse_change_pass_command(std::string message, std::string &uid, std::strin
 
     return true;
 }
-

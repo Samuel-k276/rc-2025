@@ -12,6 +12,6 @@
 #define MAX_ATTEND_SIZE 999
 #define MIN_ATTEND_SIZE 10
 #define MAX_FNAME 24
-#define MAX_FILE_SIZE 10106  // 10 MB in bytes (10.106 bytes)
+#define MAX_FILE_SIZE 10106 // 10 MB in bytes (10.106 bytes)
 
 #endif

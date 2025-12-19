@@ -12,9 +12,9 @@
 
 #include "../common/commands.h"
 #include "../common/constants.h"
-#include "user.h"
 #include "events.h"
 #include "input_handler.h"
+#include "user.h"
 
 /**
  * Login a user, responds with "RLI <status>"
@@ -109,11 +109,10 @@ void unregister(std::string uid, std::string password, int &socket_fd, struct so
     remove_user(uid);
     sendto(socket_fd, "UNR OK\n", 7, 0, (struct sockaddr *)&client_addr, addr_len);
     return;
-        
-    }
+}
 
 void list_my_events(std::string uid, std::string password, int &socket_fd, struct sockaddr_in &client_addr,
-                socklen_t &addr_len) {
+                    socklen_t &addr_len) {
 
     if (!is_user_logged_in(uid)) {
         sendto(socket_fd, "RME NLG\n", 8, 0, (struct sockaddr *)&client_addr, addr_len);
@@ -133,10 +132,10 @@ void list_my_events(std::string uid, std::string password, int &socket_fd, struc
     std::string message = get_user_events(uid);
     sendto(socket_fd, message.c_str(), message.length(), 0, (struct sockaddr *)&client_addr, addr_len);
     return;
-    }
+}
 
 void list_my_reservations(std::string uid, std::string password, int &socket_fd, struct sockaddr_in &client_addr,
-                socklen_t &addr_len) {
+                          socklen_t &addr_len) {
 
     if (!is_user_logged_in(uid)) {
         sendto(socket_fd, "RMR NLG\n", 8, 0, (struct sockaddr *)&client_addr, addr_len);
@@ -156,7 +155,7 @@ void list_my_reservations(std::string uid, std::string password, int &socket_fd,
     std::string message = get_user_reservations(uid);
     sendto(socket_fd, message.c_str(), message.length(), 0, (struct sockaddr *)&client_addr, addr_len);
     return;
-    }
+}
 
 /**
  * Init UDP server

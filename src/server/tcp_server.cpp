@@ -1,11 +1,12 @@
 #include "tcp_server.h"
-#include "user.h"
-#include "events.h"
-#include "storage.h"
-#include "input_handler.h"
-#include "../common/input.h"
 #include "../common/commands.h"
 #include "../common/constants.h"
+#include "../common/input.h"
+#include "events.h"
+#include "input_handler.h"
+#include "storage.h"
+#include "user.h"
+#include <algorithm>
 #include <arpa/inet.h>
 #include <cstdlib>
 #include <cstring>
@@ -15,13 +16,9 @@
 #include <sstream>
 #include <string>
 #include <unistd.h>
-#include <algorithm>
 
-
-
-void create(std::string uid,std::string password, std::string name,std::string event_date,
-            std::string attendance_size,std::string fname,std::string fsize,std::string fdata,
-            int client_fd) {
+void create(std::string uid, std::string password, std::string name, std::string event_date,
+            std::string attendance_size, std::string fname, std::string fsize, std::string fdata, int client_fd) {
     if (!is_user_logged_in(uid)) {
         send(client_fd, "RCE NLG\n", 8, 0);
         return;
@@ -32,25 +29,24 @@ void create(std::string uid,std::string password, std::string name,std::string e
         return;
     }
 
-    if (!is_name_valid(name) || !is_date_time_valid(event_date) ||
-    !is_attendance_size_valid(attendance_size) || !is_fname_valid(fname) ||
-    !is_fsize_valid(fsize) || !space_for_new_event()) {
+    if (!is_name_valid(name) || !is_date_time_valid(event_date) || !is_attendance_size_valid(attendance_size) ||
+        !is_fname_valid(fname) || !is_fsize_valid(fsize) || !space_for_new_event()) {
         send(client_fd, "RCE NOK\n", 8, 0);
         return;
     }
 
-    std::string message = add_event(uid,name,fname, event_date, stoi(attendance_size));
-    
+    std::string message = add_event(uid, name, fname, event_date, stoi(attendance_size));
+
     // Extract EID from response message (format: "RCE OK 001")
     std::istringstream iss(message);
     std::string status, ok, eid_str;
     iss >> status >> ok >> eid_str;
     int eid = std::stoi(eid_str);
-    
+
     // Save event description file
     // fdata is passed as parameter and may contain binary data
     save_event_description_file(eid, fname, fdata);
-    
+
     send(client_fd, message.c_str(), message.length(), 0);
     return;
 }
@@ -91,7 +87,7 @@ void close(std::string uid, std::string password, std::string eid, int client_fd
     return;
 }
 
-void list( int client_fd) {
+void list(int client_fd) {
     if (!event_exist(1)) {
         send(client_fd, "RLS NOK\n", 8, 0);
         return;
@@ -127,11 +123,11 @@ void reserve(std::string uid, std::string password, std::string eid, std::string
         send(client_fd, "PRI CLO\n", 8, 0);
         return;
     }
-    if(!enough_seats(stoi(eid), stoi(number_of_people))) {
+    if (!enough_seats(stoi(eid), stoi(number_of_people))) {
         send(client_fd, "PRI REJ\n", 8, 0);
         return;
     }
-    
+
     add_reservation(uid, stoi(eid), stoi(number_of_people));
     send(client_fd, "PRI ACC\n", 8, 0);
     return;
@@ -223,7 +219,7 @@ void handle_tcp_client(int client_fd) {
 
     buffer[bytes_read] = '\0';
     std::cout << "[TCP] Received message: " << buffer << std::endl;
-    
+
     std::string message = std::string(buffer);
 
     const CommandType command_type = get_command_type(message.substr(0, CMD_LENGTH));
@@ -285,7 +281,7 @@ void handle_tcp_client(int client_fd) {
     }
     message.pop_back();
     std::cout << "[TCP] Received message: " << message << std::endl;
-    
+
     // Close connection after sending response
     close(client_fd);
     std::cout << "[TCP] Connection closed (fd: " << client_fd << ")" << std::endl;

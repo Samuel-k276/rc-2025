@@ -76,7 +76,7 @@ int main(int argc, char *argv[]) {
     while (true) {
         if (fgets(buffer, sizeof(buffer), stdin) == NULL) {
             std::cout << "Input ended. Exiting." << std::endl;
-        break; 
+            break;
         }
         std::string command;
         std::stringstream args = get_command_and_args_with_return(buffer, command);
@@ -128,7 +128,7 @@ int main(int argc, char *argv[]) {
                 break;
             }
             case MYEVENTS: {
-                if(!parse_myevents_input(args, message)) {
+                if (!parse_myevents_input(args, message)) {
                     break;
                 }
                 if (!send_udp_command(UDP_socket_fd, message, res, response)) {
@@ -230,8 +230,6 @@ int main(int argc, char *argv[]) {
                 std::cerr << "Unknown command: " << command << std::endl;
                 break;
         }
-
-
     }
 
     freeaddrinfo(res);

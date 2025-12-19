@@ -15,7 +15,7 @@ bool send_tcp_command(std::string &buffer, struct addrinfo *res, std::string &re
         std::cerr << "Failed to create TCP socket" << std::endl;
         return false;
     }
-    
+
     ssize_t n = connect(tcp_fd, res->ai_addr, res->ai_addrlen);
     if (n == -1) {
         std::cerr << "Failed to connect TCP command to server" << std::endl;

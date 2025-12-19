@@ -2,10 +2,9 @@
 #define EVENTS_H
 
 #include <cstdbool>
+#include <set>
 #include <string>
 #include <vector>
-#include <set>
-
 
 struct Reservation {
     int eid;
@@ -22,7 +21,6 @@ struct Event {
     int state;
 };
 
-
 bool space_for_new_event();
 int new_eid();
 std::string list_events();
@@ -30,7 +28,7 @@ std::string add_event(std::string uid, std::string name, std::string file_name, 
 bool event_exist(int eid);
 bool uid_has_events(std::string uid);
 std::string get_user_events(std::string uid);
-Event* get_event(int eid);
+Event *get_event(int eid);
 int get_event_status(int eid);
 bool owner_of_event(std::string uid, int eid);
 void close_event(int eid);

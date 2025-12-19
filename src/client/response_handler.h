@@ -70,4 +70,3 @@ void handle_show_event_details_response(const std::string &response);
 void handle_reserve_response(const std::string &response);
 
 #endif // RESPONSE_HANDLER_H
-

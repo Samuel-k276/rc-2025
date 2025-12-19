@@ -3,9 +3,7 @@
 static const int days_in_month[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
 static const int days_in_month_leap[] = {31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
 
-bool is_leap_year(int year) {
-    return (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0);
-}
+bool is_leap_year(int year) { return (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0); }
 
 bool is_valid_day(int day, int month, int year) {
     if (day < 1 || day > (is_leap_year(year) ? days_in_month_leap[month - 1] : days_in_month[month - 1])) {
@@ -14,15 +12,11 @@ bool is_valid_day(int day, int month, int year) {
     return true;
 }
 
-bool is_valid_month(int month) {
-    return month >= 1 && month <= 12;
-}
+bool is_valid_month(int month) { return month >= 1 && month <= 12; }
 
-bool is_number(char number) {
-    return number >= '0' && number <= '9';
-}
+bool is_number(char number) { return number >= '0' && number <= '9'; }
 
-//dd-mm-yyyy
+// dd-mm-yyyy
 bool is_valid_date(std::string date) {
     if (date.length() != 10) {
         return false;
@@ -47,7 +41,7 @@ bool is_valid_date(std::string date) {
     return true;
 }
 
-//hh:mm
+// hh:mm
 bool is_valid_time(std::string time) {
     if (time.length() != 5) {
         return false;

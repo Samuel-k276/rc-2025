@@ -27,7 +27,7 @@ void promote_temp_user_to_user() {
 
 void clear_temp_user_session() { temp_user_session = UserSession{}; }
 
-void clear_user_session() { 
+void clear_user_session() {
     user_session = UserSession{};
     temp_user_session = UserSession{};
 }

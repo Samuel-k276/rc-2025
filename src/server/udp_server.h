@@ -14,8 +14,8 @@ void login(std::string uid, std::string password, int &socket_fd, struct sockadd
 void logout(std::string uid, std::string password, int &socket_fd, struct sockaddr_in &client_addr,
             socklen_t &addr_len);
 void unregister(std::string uid, std::string password, int &socket_fd, struct sockaddr_in &client_addr,
-            socklen_t &addr_len);
-void list_my_events(std::string uid, std::string password, int &socket_fd, struct sockaddr_in &client_addr,
                 socklen_t &addr_len);
+void list_my_events(std::string uid, std::string password, int &socket_fd, struct sockaddr_in &client_addr,
+                    socklen_t &addr_len);
 
 #endif

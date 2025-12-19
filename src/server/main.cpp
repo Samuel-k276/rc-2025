@@ -2,14 +2,14 @@
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
-#include <unistd.h>
+#include <netinet/in.h>
 #include <sys/select.h>
 #include <sys/socket.h>
-#include <netinet/in.h>
+#include <unistd.h>
 
+#include "storage.h"
 #include "tcp_server.h"
 #include "udp_server.h"
-#include "storage.h"
 
 /**
  * Server port
@@ -45,7 +45,7 @@ int main(int argc, char *argv[]) {
 
     // Initialize storage directories
     init_storage();
-    
+
     // Load data from disk
     load_data_from_disk();
 

@@ -1,12 +1,12 @@
-#include <iostream>
-#include <sstream>
-#include <iomanip>
 #include <chrono>
 #include <ctime>
+#include <iomanip>
+#include <iostream>
+#include <sstream>
 
+#include "../common/constants.h"
 #include "events.h"
 #include "storage.h"
-#include "../common/constants.h"
 
 bool space_for_new_event() {
     int next_eid = find_next_available_eid();
@@ -15,7 +15,7 @@ bool space_for_new_event() {
 
 int new_eid() {
     int next_eid = find_next_available_eid();
-    if(next_eid > 999) {
+    if (next_eid > 999) {
         return -1;
     }
     return next_eid;
@@ -25,16 +25,16 @@ int new_eid() {
 Event load_event_from_disk(int eid) {
     Event event;
     event.owner_uid = "";
-    
+
     if (!event_exists(eid)) {
         return event;
     }
-    
+
     std::string start_info = load_event_start_info(eid);
     if (start_info.empty()) {
         return event;
     }
-    
+
     std::string uid, name, desc_fname, date_time;
     int event_attend;
     if (parse_event_start_info(start_info, uid, name, desc_fname, event_attend, date_time)) {
@@ -46,7 +46,7 @@ Event load_event_from_disk(int eid) {
         event.reserved_seats = load_event_reserved_seats(eid);
         event.state = get_event_status(eid);
     }
-    
+
     return event;
 }
 
@@ -57,21 +57,19 @@ std::string list_events() {
     for (int eid : eids) {
         Event e = load_event_from_disk(eid);
         if (e.owner_uid.empty()) continue;
-        
+
         // Check and update event status (may close expired events)
         int state = get_event_status(eid);
 
-        message += " " + std::to_string(eid) +
-                   " " + e.name +
-                   " " + std::to_string(state) +
-                   " " + e.date_time;
+        message += " " + std::to_string(eid) + " " + e.name + " " + std::to_string(state) + " " + e.date_time;
     }
 
     message += "\n\n";
     return message;
 }
 
-std::string add_event(std::string uid, std::string name, std::string file_name, std::string date_time, int total_seats) {
+std::string add_event(std::string uid, std::string name, std::string file_name, std::string date_time,
+                      int total_seats) {
     int eid = new_eid();
     if (eid == -1) {
         return "RCE NOK\n";
@@ -79,11 +77,11 @@ std::string add_event(std::string uid, std::string name, std::string file_name, 
 
     // Persist event to disk
     create_event_directory(eid);
-    
+
     // Parse date_time (format: dd-mm-yyyy hh:mm)
     std::string start_date = date_time.substr(0, 10); // dd-mm-yyyy
-    std::string start_time = date_time.substr(11, 5);  // hh:mm
-    
+    std::string start_time = date_time.substr(11, 5); // hh:mm
+
     save_event_start(eid, uid, name, file_name, total_seats, start_date, start_time);
     save_event_res_file(eid, 0);
     add_event_to_user_created(eid, uid);
@@ -93,11 +91,9 @@ std::string add_event(std::string uid, std::string name, std::string file_name, 
     std::string eid_str = oss.str();
     std::string message = "RCE OK " + eid_str;
     return message;
-} 
-
-bool event_exist(int eid) {
-    return event_exists(eid);
 }
+
+bool event_exist(int eid) { return event_exists(eid); }
 
 bool uid_has_events(std::string uid) {
     std::vector<int> eids = get_user_created_events(uid);
@@ -115,7 +111,7 @@ std::string get_user_events(std::string uid) {
     return message;
 }
 
-Event* get_event(int eid) {
+Event *get_event(int eid) {
     // This is a bit tricky since we don't have memory storage anymore
     // We'll use a static variable to return a pointer, but it's only valid until next call
     static Event cached_event;
@@ -127,21 +123,21 @@ int get_event_status(int eid) {
     if (!event_exists(eid)) {
         return -1;
     }
-    
+
     Event e = load_event_from_disk(eid);
     int state = 1; // Default state
-    
+
     // Check if END file exists (event was manually closed or expired)
     if (event_end_exists(eid)) {
         return 3; // Closed
     }
-    
+
     // Determine state based on reserved seats and date
     int reserved_seats = load_event_reserved_seats(eid);
     if (reserved_seats >= e.total_seats) {
         state = 2; // Sold out
     }
-    
+
     // Check if event has expired (date in the past) and close it if needed
     std::string date_time = e.date_time;
     if (!date_time.empty() && date_time.length() >= 16) {
@@ -152,7 +148,7 @@ int get_event_status(int eid) {
             int year = std::stoi(date_time.substr(6, 4));
             int hour = std::stoi(date_time.substr(11, 2));
             int min = std::stoi(date_time.substr(14, 2));
-            
+
             // Convert event date to time_t
             std::tm event_tm = {};
             event_tm.tm_mday = day;
@@ -161,10 +157,10 @@ int get_event_status(int eid) {
             event_tm.tm_hour = hour;
             event_tm.tm_min = min;
             event_tm.tm_sec = 0;
-            
+
             std::time_t event_time = std::mktime(&event_tm);
             std::time_t current_time = std::time(nullptr);
-            
+
             // If event date has passed, close it
             if (event_time < current_time) {
                 close_event(eid);
@@ -174,7 +170,7 @@ int get_event_status(int eid) {
             // If parsing fails, skip expiration check
         }
     }
-    
+
     return state;
 }
 
@@ -206,7 +202,7 @@ void add_reservation(std::string uid, int eid, int seats) {
     char buf[20];
     std::strftime(buf, sizeof(buf), "%d-%m-%Y %H:%M:%S", &tm);
     std::string ts(buf);
-    
+
     // Persist reservation to disk
     save_reservation(eid, uid, seats, ts);
     save_event_res_file(eid, new_reserved_seats);
@@ -220,14 +216,14 @@ bool uid_has_reservations(std::string uid) {
 std::string get_user_reservations(std::string uid) {
     std::string message = "RMR OK";
     std::vector<std::tuple<int, std::string, int>> reservations = get_user_reservations_from_disk(uid);
-    
+
     // Get last 50 reservations
     int start = std::max(0, (int)reservations.size() - 50);
-    for(size_t i = start; i < reservations.size(); ++i) {
+    for (size_t i = start; i < reservations.size(); ++i) {
         int eid = std::get<0>(reservations[i]);
         std::string timestamp = std::get<1>(reservations[i]);
         int seats = std::get<2>(reservations[i]);
-        
+
         message += " " + std::to_string(eid) + " " + timestamp + " " + std::to_string(seats);
     }
     message += "\n";

@@ -5,10 +5,10 @@
 #include "session.h"
 #include <algorithm>
 #include <cstring>
-#include <iostream>
-#include <sstream>
 #include <filesystem>
 #include <fstream>
+#include <iostream>
+#include <sstream>
 
 bool is_valid_client_command(std::string command) { return user_commands.find(command) != user_commands.end(); }
 
@@ -97,11 +97,11 @@ bool get_file_data(std::string event_fname, std::string &Fdata, std::string &Fsi
         std::cerr << "Failed to open file: " << event_fname << std::endl;
         return false;
     }
-    
+
     // Extract only the filename (without path)
     std::filesystem::path path(event_fname);
     Fname = path.filename().string();
-    
+
     // Check file size (maximum size is 10 MB = 10.106 bytes)
     auto file_size = std::filesystem::file_size(event_fname);
     if (file_size > MAX_FILE_SIZE) {
@@ -109,7 +109,7 @@ bool get_file_data(std::string event_fname, std::string &Fdata, std::string &Fsi
         file.close();
         return false;
     }
-    
+
     // Read file data
     Fdata.resize(file_size);
     file.read(Fdata.data(), file_size);
@@ -125,7 +125,7 @@ bool parse_create_event_input(std::stringstream &args, std::string &message) {
         std::cerr << "Invalid create event arguments" << std::endl;
         return false;
     }
-    if(name.length() > 10) {
+    if (name.length() > 10) {
         std::cerr << "Name is too long: " << name << std::endl;
         return false;
     }
@@ -148,7 +148,8 @@ bool parse_create_event_input(std::stringstream &args, std::string &message) {
         std::cerr << "Failed to read file: " << event_fname << std::endl;
         return false;
     }
-    message = command_to_string.at(CREATE_EVENT) + " " + uid + " " + password + " " + name + " " + date + " " + time + " " + num_attendees + "\n";
+    message = command_to_string.at(CREATE_EVENT) + " " + uid + " " + password + " " + name + " " + date + " " + time +
+              " " + num_attendees + "\n";
     return true;
 }
 
@@ -232,4 +233,3 @@ bool parse_change_pass_input(std::stringstream &args, std::string &message) {
     message = command_to_string.at(CHANGE_PASS) + " " + uid + " " + old_password + " " + new_password + "\n";
     return true;
 }
-

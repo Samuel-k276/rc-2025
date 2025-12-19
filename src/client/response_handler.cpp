@@ -1,14 +1,14 @@
 #include "response_handler.h"
 #include "session.h"
+#include <cctype>
+#include <fstream>
 #include <iostream>
 #include <sstream>
-#include <fstream>
-#include <cctype>
 
 void handle_login_response(const std::string &response) {
     if (response.substr(0, 7) == "RLI OK\n") {
         std::cout << "successful login" << std::endl;
-        promote_temp_user_to_user();    
+        promote_temp_user_to_user();
     } else if (response.substr(0, 8) == "RLI REG\n") {
         std::cout << "new user registered" << std::endl;
         promote_temp_user_to_user();
@@ -88,11 +88,16 @@ void handle_myevents_response(const std::string &response) {
         ss >> status; // OK
         while (ss >> eid >> state) {
             std::string state_desc;
-            if (state == "1") state_desc = "accepting reservations";
-            else if (state == "0") state_desc = "past";
-            else if (state == "2") state_desc = "sold out";
-            else if (state == "3") state_desc = "closed";
-            else state_desc = "unknown";
+            if (state == "1")
+                state_desc = "accepting reservations";
+            else if (state == "0")
+                state_desc = "past";
+            else if (state == "2")
+                state_desc = "sold out";
+            else if (state == "3")
+                state_desc = "closed";
+            else
+                state_desc = "unknown";
             std::cout << "Event " << eid << ": " << state_desc << std::endl;
         }
     } else if (response.substr(0, 8) == "RME NOK\n") {
@@ -136,7 +141,8 @@ void handle_myreservations_response(const std::string &response) {
                 if (!full_timestamp.empty()) full_timestamp += " ";
                 full_timestamp += token;
             }
-            std::cout << "Reservation: Event " << eid << " - " << full_timestamp << " (" << value << " seats)" << std::endl;
+            std::cout << "Reservation: Event " << eid << " - " << full_timestamp << " (" << value << " seats)"
+                      << std::endl;
         }
     } else if (response.substr(0, 8) == "RMR NOK\n") {
         std::cout << "user has not made any reservation" << std::endl;
@@ -203,12 +209,18 @@ void handle_list_events_response(const std::string &response) {
         ss >> status >> status; // RLS OK
         while (ss >> eid >> name >> state >> date >> time) {
             std::string state_desc;
-            if (state == "1") state_desc = "future, not sold out";
-            else if (state == "0") state_desc = "past";
-            else if (state == "2") state_desc = "future, sold out";
-            else if (state == "3") state_desc = "closed";
-            else state_desc = "unknown";
-            std::cout << "Event " << eid << ": " << name << " (" << state_desc << ") - " << date << " " << time << std::endl;
+            if (state == "1")
+                state_desc = "future, not sold out";
+            else if (state == "0")
+                state_desc = "past";
+            else if (state == "2")
+                state_desc = "future, sold out";
+            else if (state == "3")
+                state_desc = "closed";
+            else
+                state_desc = "unknown";
+            std::cout << "Event " << eid << ": " << name << " (" << state_desc << ") - " << date << " " << time
+                      << std::endl;
         }
     } else if (response.substr(0, 8) == "RLS NOK\n") {
         std::cout << "no events has yet been created" << std::endl;
@@ -226,7 +238,7 @@ void handle_show_event_details_response(const std::string &response) {
         std::string status, uid, name, event_date, attendance_size, seats_reserved, fname, fsize;
         ss >> status >> status; // RSE OK
         ss >> uid >> name >> event_date >> attendance_size >> seats_reserved >> fname >> fsize;
-        
+
         // Extract file data (rest of the response)
         std::string fdata;
         std::getline(ss, fdata);
@@ -234,7 +246,7 @@ void handle_show_event_details_response(const std::string &response) {
         if (!fdata.empty() && fdata[0] == ' ') {
             fdata = fdata.substr(1);
         }
-        
+
         // Display event details
         std::cout << "Event Details:" << std::endl;
         std::cout << "  Owner UID: " << uid << std::endl;
@@ -243,7 +255,7 @@ void handle_show_event_details_response(const std::string &response) {
         std::cout << "  Total Seats: " << attendance_size << std::endl;
         std::cout << "  Reserved Seats: " << seats_reserved << std::endl;
         std::cout << "  File: " << fname << " (" << fsize << " bytes)" << std::endl;
-        
+
         // Save file locally
         std::ofstream file(fname, std::ios::binary);
         if (file.is_open()) {
@@ -289,4 +301,3 @@ void handle_reserve_response(const std::string &response) {
         std::cerr << "Unexpected reserve response: " << response << std::endl;
     }
 }
-

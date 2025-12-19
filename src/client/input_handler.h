@@ -169,4 +169,3 @@ bool parse_show_event_details_input(std::stringstream &args, std::string &messag
 bool parse_reserve_input(std::stringstream &args, std::string &message);
 
 #endif
-

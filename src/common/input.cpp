@@ -3,17 +3,16 @@
 
 const std::regex password_regex("[a-zA-Z0-9]{" + std::to_string(PASSWORD_LENGTH) + "}");
 const std::regex uid_regex("[0-9]{" + std::to_string(UID_LENGTH) + "}");
-const std::regex eid_regex((std::string("^(?!0{") + std::to_string(EID_LENGTH) + "})[0-9]{" + std::to_string(EID_LENGTH) + "}$"));
+const std::regex eid_regex((std::string("^(?!0{") + std::to_string(EID_LENGTH) + "})[0-9]{" +
+                            std::to_string(EID_LENGTH) + "}$"));
 const std::regex name_regex("^[A-Za-z0-9]{1,10}$");
 const std::regex datetime_regex(
-        "^(0[1-9]|[12][0-9]|3[01])-"
-        "(0[1-9]|1[0-2])-"
-        "[0-9]{4} "
-        "([01][0-9]|2[0-3]):"
-        "([0-5][0-9])$"
-    );
+    "^(0[1-9]|[12][0-9]|3[01])-"
+    "(0[1-9]|1[0-2])-"
+    "[0-9]{4} "
+    "([01][0-9]|2[0-3]):"
+    "([0-5][0-9])$");
 const std::regex fname_regex("^[A-Za-z0-9_.-]{1,20}\\.[A-Za-z]{3}$");
-
 
 bool is_password_valid(std::string password) {
     if (password.empty()) {
@@ -56,8 +55,7 @@ bool is_date_time_valid(std::string date_time) {
 }
 
 bool is_attendance_size_valid(std::string attendance_size) {
-    if (!std::regex_match(attendance_size, std::regex("^[0-9]{2,3}$")))
-        return false;
+    if (!std::regex_match(attendance_size, std::regex("^[0-9]{2,3}$"))) return false;
 
     int val = std::stoi(attendance_size);
     return val >= 10 && val <= 999;
@@ -72,8 +70,7 @@ bool is_fname_valid(std::string fname) {
 }
 
 bool is_fsize_valid(std::string fsize) {
-    if (!std::regex_match(fsize, std::regex("^[0-9]+$")))
-        return false;
+    if (!std::regex_match(fsize, std::regex("^[0-9]+$"))) return false;
 
     long size = std::stol(fsize);
     return size >= 0 && size <= 10'000'000;
@@ -81,8 +78,7 @@ bool is_fsize_valid(std::string fsize) {
 
 bool is_number_of_people_valid(std::string number_of_people) {
     std::regex r("^(?:[1-9]|[1-9][0-9]|[1-9][0-9]{2})$");
-    if (!std::regex_match(number_of_people, r))
-        return false;
+    if (!std::regex_match(number_of_people, r)) return false;
 
     int val = std::stoi(number_of_people);
     return val >= 1 && val <= 999;

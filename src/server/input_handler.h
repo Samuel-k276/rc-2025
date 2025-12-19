@@ -1,8 +1,8 @@
 #ifndef INPUT_HANDLER_H
 #define INPUT_HANDLER_H
 
-#include <string>
 #include "../common/commands.h"
+#include <string>
 
 // UDP command parsers
 /**
@@ -52,7 +52,8 @@ bool parse_list_my_reservations_command(std::string message, std::string &uid, s
 
 // TCP command parsers
 /**
- * Parse and validate create event command: "CRE <uid> <password> <name> <event_date> <attendance_size> <fname> <fsize> <fdata>"
+ * Parse and validate create event command: "CRE <uid> <password> <name> <event_date> <attendance_size> <fname> <fsize>
+ * <fdata>"
  * @param message: message to parse
  * @param uid: output parameter for UID
  * @param password: output parameter for password
@@ -64,9 +65,9 @@ bool parse_list_my_reservations_command(std::string message, std::string &uid, s
  * @param fdata: output parameter for file data
  * @return bool: true if valid, false otherwise
  */
-bool parse_create_command(std::string message, std::string &uid, std::string &password,
-                          std::string &name, std::string &event_date, std::string &attendance_size,
-                          std::string &fname, std::string &fsize, std::string &fdata);
+bool parse_create_command(std::string message, std::string &uid, std::string &password, std::string &name,
+                          std::string &event_date, std::string &attendance_size, std::string &fname, std::string &fsize,
+                          std::string &fdata);
 
 /**
  * Parse and validate close event command: "CLS <uid> <password> <eid>"
@@ -94,8 +95,8 @@ bool parse_list_command(std::string message);
  * @param number_of_people: output parameter for number of people
  * @return bool: true if valid, false otherwise
  */
-bool parse_reserve_command(std::string message, std::string &uid, std::string &password,
-                           std::string &eid, std::string &number_of_people);
+bool parse_reserve_command(std::string message, std::string &uid, std::string &password, std::string &eid,
+                           std::string &number_of_people);
 
 /**
  * Parse and validate change password command: "CPS <uid> <old_password> <new_password>"
@@ -105,7 +106,7 @@ bool parse_reserve_command(std::string message, std::string &uid, std::string &p
  * @param new_password: output parameter for new password
  * @return bool: true if valid, false otherwise
  */
-bool parse_change_pass_command(std::string message, std::string &uid, std::string &old_password, std::string &new_password);
+bool parse_change_pass_command(std::string message, std::string &uid, std::string &old_password,
+                               std::string &new_password);
 
 #endif
-
