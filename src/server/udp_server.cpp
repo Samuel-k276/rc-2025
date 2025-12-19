@@ -14,6 +14,7 @@
 #include "../common/constants.h"
 #include "user.h"
 #include "events.h"
+#include "input_handler.h"
 
 /**
  * Login a user, responds with "RLI <status>"
@@ -216,84 +217,69 @@ void handle_udp_message(int socket_fd) {
 
     const CommandType command_type = get_command_type(message.substr(0, CMD_LENGTH));
     switch (command_type) {
-        case LOGIN:
-            if (!is_valid_login_command(message)) {
+        case LOGIN: {
+            std::string uid, password;
+            if (!parse_login_command(message, uid, password)) {
                 std::cerr << "[UDP] Invalid login command: " << message << std::endl;
                 n = sendto(socket_fd, "ERR\n", 4, 0, (struct sockaddr *)&client_addr, addr_len);
                 break;
             }
-            {
-                std::stringstream ss(message);
-                std::string command, uid, password;
-                ss >> command >> uid >> password;
-                login(uid, password, socket_fd, client_addr, addr_len);
-            }
+            login(uid, password, socket_fd, client_addr, addr_len);
             break;
-        case LOGOUT:
-            if (!is_valid_logout_command(message)) {
+        }
+        case LOGOUT: {
+            std::string uid, password;
+            if (!parse_logout_command(message, uid, password)) {
                 std::cerr << "[UDP] Invalid logout command: " << message << std::endl;
                 n = sendto(socket_fd, "ERR\n", 4, 0, (struct sockaddr *)&client_addr, addr_len);
                 break;
             }
-            {
-                std::stringstream ss(message);
-                std::string command, uid, password;
-                ss >> command >> uid >> password;
-                logout(uid, password, socket_fd, client_addr, addr_len);
-            }
+            logout(uid, password, socket_fd, client_addr, addr_len);
             break;
-        case UNREGISTER:
-            if (!is_valid_unregister_command(message)) {
+        }
+        case UNREGISTER: {
+            std::string uid, password;
+            if (!parse_unregister_command(message, uid, password)) {
                 std::cerr << "[UDP] Invalid unregister command: " << message << std::endl;
                 n = sendto(socket_fd, "ERR\n", 4, 0, (struct sockaddr *)&client_addr, addr_len);
                 break;
             }
-            {
-                std::stringstream ss(message);
-                std::string command, uid, password;
-                ss >> command >> uid >> password;
-                unregister(uid, password, socket_fd, client_addr, addr_len);
-            }
+            unregister(uid, password, socket_fd, client_addr, addr_len);
             if (n == -1) {
                 perror("sendto");
                 exit(1);
             }
             break;
-        case LIST_MY_EVENTS:
-            if (!is_valid_list_my_events_command(message)) {
+        }
+        case LIST_MY_EVENTS: {
+            std::string uid, password;
+            if (!parse_list_my_events_command(message, uid, password)) {
                 std::cerr << "[UDP] Invalid list my events command: " << message << std::endl;
                 n = sendto(socket_fd, "ERR\n", 4, 0, (struct sockaddr *)&client_addr, addr_len);
                 break;
             }
-            {
-                std::stringstream ss(message);
-                std::string command, uid, password;
-                ss >> command >> uid >> password;
-                list_my_events(uid, password, socket_fd, client_addr, addr_len);
-            }
+            list_my_events(uid, password, socket_fd, client_addr, addr_len);
             if (n == -1) {
                 perror("sendto");
                 exit(1);
             }
             break;
-        case LIST_MY_RESERVATIONS:
-            if (!is_valid_list_my_reservations_command(message)) {
+        }
+        case LIST_MY_RESERVATIONS: {
+            std::string uid, password;
+            if (!parse_list_my_reservations_command(message, uid, password)) {
                 std::cerr << "[UDP] Invalid list my reservations command: " << message << std::endl;
                 n = sendto(socket_fd, "ERR\n", 4, 0, (struct sockaddr *)&client_addr, addr_len);
                 break;
             }
-            {
-                std::stringstream ss(message);
-                std::string command, uid, password;
-                ss >> command >> uid >> password;
-                list_my_reservations(uid, password, socket_fd, client_addr, addr_len);
-            }
+            list_my_reservations(uid, password, socket_fd, client_addr, addr_len);
             n = sendto(socket_fd, "LMR\n", 4, 0, (struct sockaddr *)&client_addr, addr_len);
             if (n == -1) {
                 perror("sendto");
                 exit(1);
             }
             break;
+        }
         case INVALID_COMMAND:
         default:
             std::cerr << "[UDP] Invalid command: " << message << std::endl;
