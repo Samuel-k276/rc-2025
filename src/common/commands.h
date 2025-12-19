@@ -94,4 +94,5 @@ bool is_valid_list_my_events_command(std::string message);
  */
 bool is_valid_list_my_reservations_command(std::string message);
 
+bool is_valid_create_command(std::string message);
 #endif

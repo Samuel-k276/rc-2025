@@ -112,3 +112,52 @@ bool is_valid_list_my_reservations_command(std::string message) {
 
     return get_command_type(command) == LIST_MY_RESERVATIONS && is_uid_valid(uid) && is_password_valid(password);
 }
+
+bool is_valid_create_command(std::string message) {
+    if (message.empty()) {
+        return false;
+    }
+
+    std::stringstream ss(message);
+    std::string command;
+    std::string uid;
+    std::string password;
+    std::string name;
+    std::string event_date;
+    std::string attendance_size;
+    std::string fname;
+    std::string fsize;
+    std::string fdata;
+    ss >> command >> uid >> password >> name >> event_date >> attendance_size >> fname >> fsize >> fdata;
+
+    if (!is_uid_valid(uid)) {
+        std::cerr << "Invalid UID: " << uid << std::endl;
+        return false;
+    }
+    if (!is_password_valid(password)) {
+        std::cerr << "Invalid password: " << password << std::endl;
+        return false;
+    }
+    if (!is_name_valid(fname)) {
+        std::cerr << "Invalid event name: " << name << std::endl;
+        return false;
+    }
+    if (!is_date_time_valid(event_date)) {
+        std::cerr << "Invalid password: " << password << std::endl;
+        return false;
+    }
+    if (!is_attendance_size_valid(attendance_size)) {
+        std::cerr << "Invalid attendance size: " << attendance_size << std::endl;
+        return false;
+    }
+    if (!is_fname_valid(fname)) {
+        std::cerr << "Invalid file name: " << fname << std::endl;
+        return false;
+    }
+    if (!is_fsize_valid(fsize)) {
+        std::cerr << "Invalid file size: " << fsize << std::endl;
+        return false;
+    }
+
+    return true;
+}

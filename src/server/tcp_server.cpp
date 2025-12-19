@@ -1,5 +1,8 @@
 #include "tcp_server.h"
-
+#include "user.h"
+#include "events.h"
+#include "../common/input.h"
+#include "../common/commands.h"
 #include "../common/constants.h"
 #include <arpa/inet.h>
 #include <cstdlib>
@@ -8,6 +11,33 @@
 #include <netdb.h>
 #include <netinet/in.h>
 #include <unistd.h>
+
+
+
+void create(std::string uid,std::string password, std::string name,std::string event_date,
+            std::string attendance_size,std::string fname,std::string fsize,std::string fdata,
+            int client_fd) {
+    if (!is_user_logged_in(uid)) {
+        send(client_fd, "RCE NLG\n", 8, 0);
+        return;
+    }
+
+    if (get_user(uid).password != password) {
+        send(client_fd, "RCE WRP\n", 8, 0);
+        return;
+    }
+
+    if (!is_name_valid(name) || !is_date_time_valid(event_date) ||
+    !is_attendance_size_valid(attendance_size) || !is_fname_valid(fname) ||
+    !is_fsize_valid(fsize) || !space_for_new_event()) {
+        send(client_fd, "RCE NOK\n", 8, 0);
+        return;
+    }
+
+    std::string message = add_event(uid,name,fname, event_date, stoi(attendance_size));
+    send(client_fd, message.c_str(), message.length(), 0);
+    return;
+}
 
 void init_tcp_server(char *port, int &socket_fd, struct addrinfo &hints, struct addrinfo *&res) {
     socket_fd = socket(AF_INET, SOCK_STREAM, 0); // TCP socket
@@ -75,11 +105,49 @@ void handle_tcp_client(int client_fd) {
     buffer[bytes_read] = '\0';
     std::cout << "[TCP] Received message: " << buffer << std::endl;
     
-    // Send response
-    ssize_t n = write(client_fd, "Message received", 16);
-    if (n < 0) {
-        perror("Failed to send message received to client");
+    std::string message = std::string(buffer);
+
+    const CommandType command_type = get_command_type(message.substr(0, CMD_LENGTH));
+    switch (command_type) {
+        case CREATE_EVENT:
+            if (!is_valid_create_command(message)) {
+                std::cerr << "[TCP] Invalid create command: " << message << std::endl;
+                send(client_fd, "ERR\n", 4, 0);
+                break;
+            }
+            {
+                std::stringstream ss(message);
+                std::string command;
+                std::string uid;
+                std::string password;
+                std::string name;
+                std::string event_date;
+                std::string attendance_size;
+                std::string fname;
+                std::string fsize;
+                std::string fdata;
+
+                ss >> command >> uid >> password >> name >> event_date >> attendance_size >> fname >> fsize >> fdata;
+                create(uid, password, name, event_date, attendance_size,
+                        fname, fsize, fdata, client_fd);
+            }
+            break;
+        case CLOSE_EVENT:
+            break;
+        case LIST_EVENTS:
+            break;
+        case SHOW_EVENT_DETAILS:
+            break;
+        case RESERVE:
+            break;
+        case CHANGE_PASS:
+        default:
+            std::cerr << "[TCP] Invalid command: " << message << std::endl;
+            send(client_fd, "ERR\n", 4, 0);
+            break;
     }
+    message.pop_back();
+    std::cout << "[UDP] Received message: " << message << std::endl;
     
     // Close connection after sending response
     close(client_fd);

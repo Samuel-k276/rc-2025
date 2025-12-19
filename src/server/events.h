@@ -4,31 +4,35 @@
 #include <cstdbool>
 #include <string>
 #include <vector>
+#include <set>
+
 
 struct Reservation {
-    int uid;
-    int seats;
-    std::string timestamp;
-};
-
-struct Event {
     int eid;
+    std::string timestamp;
+    int seats;
+};
+struct Event {
+    std::string owner_uid;
     std::string name;
+    std::string file_name;
     std::string date_time;
     int total_seats;
     int reserved_seats;
-    int owner_uid;
     int state;
-
-    std::string file_name;
-    std::vector<Reservation> reservations;
 };
 
+bool space_for_new_event();
 int new_eid();
-int add_event(int uid); // TODO: Implement the whole event
-void remove_event(int eid);
+std::string add_event(std::string uid, std::string name, std::string file_name, std::string date_time, int total_seats);
+Event* get_event(int eid);
 bool event_exist(int eid);
-bool uid_has_events(int uid);
-// TODO:
-//std::vector<Event*> get_user_events(int uid);
+bool uid_has_events(std::string uid);
+std::string get_user_events(std::string uid);
+
+bool enough_seats(Event event, int seats);
+void add_reservation(std::string uid, int eid, int seats);
+
+bool uid_has_reservations(std::string uid);
+std::string get_user_reservations(std::string uid);
 #endif
