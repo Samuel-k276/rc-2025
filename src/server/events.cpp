@@ -25,6 +25,9 @@ int new_eid() {
 Event load_event_from_disk(int eid) {
     Event event;
     event.owner_uid = "";
+    event.total_seats = 0;
+    event.reserved_seats = 0;
+    event.state = 1;
 
     if (!event_exists(eid)) {
         return event;
@@ -44,7 +47,8 @@ Event load_event_from_disk(int eid) {
         event.date_time = date_time;
         event.total_seats = event_attend;
         event.reserved_seats = load_event_reserved_seats(eid);
-        event.state = get_event_status(eid);
+        // Don't call get_event_status here to avoid recursion - state will be calculated when needed
+        event.state = 1; // Default state
     }
 
     return event;
@@ -124,17 +128,21 @@ int get_event_status(int eid) {
         return -1;
     }
 
-    Event e = load_event_from_disk(eid);
-    int state = 1; // Default state
-
     // Check if END file exists (event was manually closed or expired)
     if (event_end_exists(eid)) {
         return 3; // Closed
     }
 
+    Event e = load_event_from_disk(eid);
+    if (e.owner_uid.empty()) {
+        return -1; // Event not properly loaded
+    }
+
+    int state = 1; // Default state
+
     // Determine state based on reserved seats and date
     int reserved_seats = load_event_reserved_seats(eid);
-    if (reserved_seats >= e.total_seats) {
+    if (e.total_seats > 0 && reserved_seats >= e.total_seats) {
         state = 2; // Sold out
     }
 

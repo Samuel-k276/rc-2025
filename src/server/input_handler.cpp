@@ -148,7 +148,11 @@ bool parse_create_command(std::string message, std::string &uid, std::string &pa
 
     std::stringstream ss(message);
     std::string command;
-    ss >> command >> uid >> password >> name >> event_date >> attendance_size >> fname >> fsize;
+    std::string date, time;
+    ss >> command >> uid >> password >> name >> date >> time >> attendance_size >> fname >> fsize;
+    
+    // Join date and time with space
+    event_date = date + " " + time;
 
     if (get_command_type(command) != CREATE_EVENT) {
         return false;
@@ -184,14 +188,11 @@ bool parse_create_command(std::string message, std::string &uid, std::string &pa
     }
 
     // Read the rest of the message as fdata (may contain spaces or binary data)
-    // Find position after fsize
-    size_t fsize_pos = message.find(fsize);
-    if (fsize_pos != std::string::npos) {
-        size_t fdata_start = fsize_pos + fsize.length();
-        // Skip space after fsize
-        if (fdata_start < message.length() && message[fdata_start] == ' ') {
-            fdata_start++;
-        }
+    // Find position after fname and fsize by searching for the pattern "fname fsize "
+    std::string fname_fsize_pattern = fname + " " + fsize + " ";
+    size_t pattern_pos = message.find(fname_fsize_pattern);
+    if (pattern_pos != std::string::npos) {
+        size_t fdata_start = pattern_pos + fname_fsize_pattern.length();
         // Read until newline (if present)
         size_t fdata_end = message.find('\n', fdata_start);
         if (fdata_end == std::string::npos) {
@@ -199,7 +200,24 @@ bool parse_create_command(std::string message, std::string &uid, std::string &pa
         }
         fdata = message.substr(fdata_start, fdata_end - fdata_start);
     } else {
-        return false;
+        // Fallback: try to find fsize after fname
+        size_t fname_pos = message.find(fname);
+        if (fname_pos != std::string::npos) {
+            size_t search_start = fname_pos + fname.length();
+            size_t fsize_pos = message.find(" " + fsize + " ", search_start);
+            if (fsize_pos != std::string::npos) {
+                size_t fdata_start = fsize_pos + fsize.length() + 2; // +2 for " " and " "
+                size_t fdata_end = message.find('\n', fdata_start);
+                if (fdata_end == std::string::npos) {
+                    fdata_end = message.length();
+                }
+                fdata = message.substr(fdata_start, fdata_end - fdata_start);
+            } else {
+                return false;
+            }
+        } else {
+            return false;
+        }
     }
 
     return true;

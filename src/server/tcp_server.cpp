@@ -279,9 +279,17 @@ void handle_tcp_client(int client_fd) {
             send(client_fd, "ERR\n", 4, 0);
             break;
     }
-    message.pop_back();
+    
+    // Remove trailing newline if present for logging
+    if (!message.empty() && message.back() == '\n') {
+        message.pop_back();
+    }
     std::cout << "[TCP] Received message: " << message << std::endl;
 
+    // Shutdown write side to signal that we're done sending
+    // This allows the client to detect EOF and close gracefully
+    shutdown(client_fd, SHUT_WR);
+    
     // Close connection after sending response
     close(client_fd);
     std::cout << "[TCP] Connection closed (fd: " << client_fd << ")" << std::endl;
