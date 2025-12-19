@@ -119,20 +119,44 @@ void list_my_events(std::string uid, std::string password, int &socket_fd, struc
         return;
     }
 
+    if (get_user(uid).password != password) {
+        sendto(socket_fd, "RME WRP\n", 8, 0, (struct sockaddr *)&client_addr, addr_len);
+        return;
+    }
+
     if (!uid_has_events(uid)) {
         sendto(socket_fd, "RME NOK\n", 8, 0, (struct sockaddr *)&client_addr, addr_len);
         return;
     }
 
-    if (get_user(uid).password != password) {
-        sendto(socket_fd, "RME WRP\n", 8, 0, (struct sockaddr *)&client_addr, addr_len);
-        return;
-    }
-    
     std::string message = get_user_events(uid);
-    sendto(socket_fd, message.c_str(), message.length() , 0, (struct sockaddr *)&client_addr, addr_len);
+    sendto(socket_fd, message.c_str(), message.length(), 0, (struct sockaddr *)&client_addr, addr_len);
     return;
     }
+
+void list_my_reservations(std::string uid, std::string password, int &socket_fd, struct sockaddr_in &client_addr,
+                socklen_t &addr_len) {
+
+    if (!is_user_logged_in(uid)) {
+        sendto(socket_fd, "RMR NLG\n", 8, 0, (struct sockaddr *)&client_addr, addr_len);
+        return;
+    }
+
+    if (get_user(uid).password != password) {
+        sendto(socket_fd, "RMR WRP\n", 8, 0, (struct sockaddr *)&client_addr, addr_len);
+        return;
+    }
+
+    if (!uid_has_reservations(uid)) {
+        sendto(socket_fd, "RMR NOK\n", 8, 0, (struct sockaddr *)&client_addr, addr_len);
+        return;
+    }
+
+    std::string message = get_user_reservations(uid);
+    sendto(socket_fd, message.c_str(), message.length(), 0, (struct sockaddr *)&client_addr, addr_len);
+    return;
+    }
+
 /**
  * Init UDP server
  * @param port: port
@@ -257,6 +281,12 @@ void handle_udp_message(int socket_fd) {
                 std::cerr << "[UDP] Invalid list my reservations command: " << message << std::endl;
                 n = sendto(socket_fd, "ERR\n", 4, 0, (struct sockaddr *)&client_addr, addr_len);
                 break;
+            }
+            {
+                std::stringstream ss(message);
+                std::string command, uid, password;
+                ss >> command >> uid >> password;
+                list_my_reservations(uid, password, socket_fd, client_addr, addr_len);
             }
             n = sendto(socket_fd, "LMR\n", 4, 0, (struct sockaddr *)&client_addr, addr_len);
             if (n == -1) {

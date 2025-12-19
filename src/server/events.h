@@ -8,12 +8,10 @@
 
 
 struct Reservation {
-    std::string eid;
-    std::string uid;
+    int eid;
+    std::string timestamp;
     int seats;
-    int timestamp;
 };
-
 struct Event {
     std::string owner_uid;
     std::string name;
@@ -26,7 +24,14 @@ struct Event {
 
 int new_eid();
 int add_event(std::string uid);
+Event* get_event(int eid);
 bool event_exist(int eid);
 bool uid_has_events(std::string uid);
 std::string get_user_events(std::string uid);
+
+bool enough_seats(Event event, int seats);
+void add_reservation(std::string uid, int eid, int seats);
+
+bool uid_has_reservations(std::string uid);
+std::string get_user_reservations(std::string uid);
 #endif
