@@ -100,5 +100,7 @@ bool is_valid_close_command(std::string message);
 
 bool is_valid_list_command(std::string message);
 
+bool is_valid_reserve_command(std::string message);
+
 bool is_valid_change_pass_command(std::string message);
 #endif

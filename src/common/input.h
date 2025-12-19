@@ -36,4 +36,5 @@ bool is_date_time_valid(std::string date_time);
 bool is_attendance_size_valid(std::string attendance_size);
 bool is_fname_valid(std::string fname);
 bool is_fsize_valid(std::string fsize);
+bool is_number_of_people_valid(std::string number_of_people);
 #endif

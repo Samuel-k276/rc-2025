@@ -78,3 +78,12 @@ bool is_fsize_valid(std::string fsize) {
     long size = std::stol(fsize);
     return size >= 0 && size <= 10'000'000;
 }
+
+bool is_number_of_people_valid(std::string number_of_people) {
+    std::regex r("^(?:[1-9]|[1-9][0-9]|[1-9][0-9]{2})$");
+    if (!std::regex_match(number_of_people, r))
+        return false;
+
+    int val = std::stoi(number_of_people);
+    return val >= 1 && val <= 999;
+}

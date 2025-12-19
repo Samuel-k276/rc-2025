@@ -35,7 +35,7 @@ int get_event_status(int eid);
 bool owner_of_event(std::string uid, int eid);
 void close_event(int eid);
 
-bool enough_seats(Event event, int seats);
+bool enough_seats(int eid, int seats);
 void add_reservation(std::string uid, int eid, int seats);
 bool uid_has_reservations(std::string uid);
 std::string get_user_reservations(std::string uid);

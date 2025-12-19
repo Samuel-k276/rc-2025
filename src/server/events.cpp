@@ -30,7 +30,7 @@ std::string list_events() {
 
     for (int eid = 1; eid < next_eid; ++eid) {
         const Event& e = events[eid];
-        
+
         message += " " + std::to_string(eid) +
                    " " + e.name +
                    " " + std::to_string(e.state) +
@@ -102,8 +102,9 @@ void close_event(int eid) {
     return;
 }
 
-bool enough_seats(Event event, int seats) {
-    return event.reserved_seats + seats > event.total_seats;
+bool enough_seats(int eid, int seats) {
+    Event* event = get_event(eid);
+    return event -> reserved_seats + seats <= event -> total_seats;
 }
 
 void add_reservation(std::string uid, int eid, int seats) {

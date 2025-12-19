@@ -87,6 +87,42 @@ void list( int client_fd) {
     return;
 }
 
+void reserve(std::string uid, std::string password, std::string eid, std::string number_of_people, int client_fd) {
+    if (!event_exist(stoi(eid))) {
+        send(client_fd, "PRI NOK\n", 8, 0);
+        return;
+    }
+    if (!is_user_logged_in(uid)) {
+        send(client_fd, "PRI NLG\n", 8, 0);
+        return;
+    }
+    if (get_user(uid).password != password) {
+        send(client_fd, "PRI WRP\n", 8, 0);
+        return;
+    }
+    int state = get_event_status(stoi(eid));
+    if (state == 2) {
+        send(client_fd, "PRI SLD\n", 8, 0);
+        return;
+    }
+    if (state == 0) {
+        send(client_fd, "PRI PST\n", 8, 0);
+        return;
+    }
+    if (state == 3) {
+        send(client_fd, "PRI CLO\n", 8, 0);
+        return;
+    }
+    if(!enough_seats(stoi(eid), stoi(number_of_people))) {
+        send(client_fd, "PRI REJ\n", 8, 0);
+        return;
+    }
+    
+    add_reservation(uid, stoi(eid), stoi(number_of_people));
+    send(client_fd, "PRI ACC\n", 8, 0);
+    return;
+}
+
 void change_pass(std::string uid, std::string old_password, std::string new_password, int client_fd) {
     if (!is_user_logged_in(uid)) {
         send(client_fd, "RCP NLG\n", 8, 0);
@@ -229,6 +265,20 @@ void handle_tcp_client(int client_fd) {
         case SHOW_EVENT_DETAILS:
             break;
         case RESERVE:
+            if (!is_valid_reserve_command(message)) {
+                std::cerr << "[TCP] Invalid reserve command: " << message << std::endl;
+                send(client_fd, "ERR\n", 4, 0);
+                break;
+            }
+            {
+                std::stringstream ss(message);
+                std::string command;
+                std::string uid;
+                std::string password;
+                std::string eid;
+                std::string number_of_people;
+                reserve(uid, password, eid, number_of_people, client_fd);
+            }
             break;
         case CHANGE_PASS:
             if (!is_valid_change_pass_command(message)) {
