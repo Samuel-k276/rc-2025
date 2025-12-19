@@ -220,3 +220,19 @@ bool is_valid_change_pass_command(std::string message) {
 
     return true;
 }
+
+bool is_valid_list_command(std::string message) {
+    std::stringstream ss(message);
+    std::string command;
+    std::string extra;
+    if (!(ss >> command)) {
+        return false;
+    }
+
+    if (ss >> extra) {
+        std::cerr << "Invalid list, no extra arguments" << std::endl;
+        return false;
+    }
+
+    return true;
+}

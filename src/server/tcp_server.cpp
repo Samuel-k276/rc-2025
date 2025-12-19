@@ -77,6 +77,16 @@ void close(std::string uid, std::string password, std::string eid, int client_fd
     return;
 }
 
+void list( int client_fd) {
+    if (!event_exist(1)) {
+        send(client_fd, "RLS NOK\n", 8, 0);
+        return;
+    }
+    std::string message = list_events();
+    send(client_fd, message.c_str(), message.length(), 0);
+    return;
+}
+
 void change_pass(std::string uid, std::string old_password, std::string new_password, int client_fd) {
     if (!is_user_logged_in(uid)) {
         send(client_fd, "RCP NLG\n", 8, 0);
@@ -207,6 +217,14 @@ void handle_tcp_client(int client_fd) {
             }
             break;
         case LIST_EVENTS:
+            if (!is_valid_list_command(message)) {
+                std::cerr << "[TCP] Invalid list command: " << message << std::endl;
+                send(client_fd, "ERR\n", 4, 0);
+                break;
+            }
+            {
+                list(client_fd);
+            }
             break;
         case SHOW_EVENT_DETAILS:
             break;

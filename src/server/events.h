@@ -25,6 +25,7 @@ struct Event {
 
 bool space_for_new_event();
 int new_eid();
+std::string list_events();
 std::string add_event(std::string uid, std::string name, std::string file_name, std::string date_time, int total_seats);
 bool event_exist(int eid);
 bool uid_has_events(std::string uid);

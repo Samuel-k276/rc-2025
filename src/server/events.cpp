@@ -25,6 +25,22 @@ int new_eid() {
     return next_eid++;
 }
 
+std::string list_events() {
+        std::string message = "RLS OK";
+
+    for (int eid = 1; eid < next_eid; ++eid) {
+        const Event& e = events[eid];
+        
+        message += " " + std::to_string(eid) +
+                   " " + e.name +
+                   " " + std::to_string(e.state) +
+                   " " + e.date_time;
+    }
+
+    message += "\n";
+    return message;
+}
+
 std::string add_event(std::string uid, std::string name, std::string file_name, std::string date_time, int total_seats) {
     int eid = new_eid();
 
