@@ -128,4 +128,44 @@ bool parse_myevents_input(std::stringstream &args, std::string &message);
  */
 bool parse_exit_input(std::stringstream &args);
 
+/**
+ * Parse the create event input and return the message.
+ * @param args: arguments
+ * @param message: message
+ * @return bool: true if the create event input is parsed successfully, false otherwise
+ */
+bool parse_create_event_input(std::stringstream &args, std::string &message);
+
+/**
+ * Parse the close event input and return the message.
+ * @param args: arguments
+ * @param message: message
+ * @return bool: true if the close event input is parsed successfully, false otherwise
+ */
+bool parse_close_event_input(std::stringstream &args, std::string &message);
+
+/**
+ * Parse the list events input and return the message.
+ * @param args: arguments
+ * @param message: message
+ * @return bool: true if the list events input is parsed successfully, false otherwise
+ */
+bool parse_list_events_input(std::stringstream &args, std::string &message);
+
+/**
+ * Parse the show event details input and return the message.
+ * @param args: arguments
+ * @param message: message
+ * @return bool: true if the show event details input is parsed successfully, false otherwise
+ */
+bool parse_show_event_details_input(std::stringstream &args, std::string &message);
+
+/**
+ * Parse the reserve input and return the message.
+ * @param args: arguments
+ * @param message: message
+ * @return bool: true if the reserve input is parsed successfully, false otherwise
+ */
+bool parse_reserve_input(std::stringstream &args, std::string &message);
+
 #endif

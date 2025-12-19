@@ -8,7 +8,7 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
-bool send_tcp_command(int socket_fd, std::string &buffer, struct addrinfo *res) {
+bool send_tcp_command(int socket_fd, std::string &buffer, struct addrinfo *res, std::string &response) {
     ssize_t n = connect(socket_fd, res->ai_addr, res->ai_addrlen);
     if (n == -1) {
         std::cerr << "Failed to connect TCP command to server" << std::endl;
@@ -21,14 +21,15 @@ bool send_tcp_command(int socket_fd, std::string &buffer, struct addrinfo *res) 
         close(socket_fd);
         return false;
     }
-    char response[4096];
-    n = read(socket_fd, response, sizeof(response) - 1);
+    char response_buffer[4096];
+    n = read(socket_fd, response_buffer, sizeof(response_buffer) - 1);
     if (n == -1) {
-        std::cerr << "Failed to receive UDP command to server" << std::endl;
+        std::cerr << "Failed to receive TCP command from server" << std::endl;
         close(socket_fd);
         return false;
     }
-    response[n] = '\0';
+    response_buffer[n] = '\0';
+    response = std::string(response_buffer);
     close(socket_fd);
     return true;
 }

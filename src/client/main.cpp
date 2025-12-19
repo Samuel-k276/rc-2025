@@ -193,17 +193,96 @@ int main(int argc, char *argv[]) {
                 std::cout << "Exiting program" << std::endl;
                 exit(EXIT_SUCCESS);
                 break;
-            case CREATE_EVENT:
+            case CREATE_EVENT: {
+                if (!parse_create_event_input(args, message)) {
+                    std::cerr << "Invalid create event arguments" << std::endl;
+                    break;
+                }
+                if (!send_tcp_command(TCP_socket_fd, message, res, response)) {
+                    std::cerr << "Failed to send create event command to server" << std::endl;
+                    break;
+                }
+                if (response == "CRE OK\n") {
+                    std::cout << "Event created successfully" << std::endl;
+                    break;
+                } else if (response == "CRE NOK\n") {
+                    std::cerr << "Failed to create event" << std::endl;
+                    break;
+                } else if (response == "CRE ERR\n") {
+                    std::cerr << "Error creating event" << std::endl;
+                    break;
+                }
                 break;
+            }
             case CLOSE_EVENT:
+                if (!parse_close_event_input(args, message)) {
+                    std::cerr << "Invalid close event arguments" << std::endl;
+                    break;
+                }
+                if (!send_tcp_command(TCP_socket_fd, message, res, response)) {
+                    std::cerr << "Failed to send close event command to server" << std::endl;
+                    break;
+                }
+                if (response == "CLS OK\n") {
+                    std::cout << "Event closed successfully" << std::endl;
+                    break;
+                } else if (response == "CLS NOK\n") {
+                    std::cerr << "Failed to close event" << std::endl;
+                    break;
+                } else if (response == "CLS ERR\n") {
+                    std::cerr << "Error closing event" << std::endl;
+                    break;
+                }
                 break;
             case LIST_EVENTS:
+                if (!parse_list_events_input(args, message)) {
+                    std::cerr << "Invalid list events arguments" << std::endl;
+                    break;
+                }
+                if (!send_tcp_command(TCP_socket_fd, message, res, response)) {
+                    std::cerr << "Failed to send list events command to server" << std::endl;
+                    break;
+                }
                 break;
             case SHOW_EVENT_DETAILS:
+                if (!parse_show_event_details_input(args, message)) {
+                    std::cerr << "Invalid show event details arguments" << std::endl;
+                    break;
+                }
+                if (!send_tcp_command(TCP_socket_fd, message, res, response)) {
+                    std::cerr << "Failed to send show event details command to server" << std::endl;
+                    break;
+                }
                 break;
             case RESERVE:
+                if (!parse_reserve_input(args, message)) {
+                    std::cerr << "Invalid reserve arguments" << std::endl;
+                    break;
+                }
+                if (!send_tcp_command(TCP_socket_fd, message, res, response)) {
+                    std::cerr << "Failed to send reserve command to server" << std::endl;
+                    break;
+                }
                 break;
             case CHANGE_PASS:
+                if (!parse_change_pass_input(args, message)) {
+                    std::cerr << "Invalid change pass arguments" << std::endl;
+                    break;
+                }
+                if (!send_tcp_command(TCP_socket_fd, message, res, response)) {
+                    std::cerr << "Failed to send change pass command to server" << std::endl;
+                    break;
+                }
+                if (response == "CPS OK\n") {
+                    std::cout << "Password changed successfully" << std::endl;
+                    break;
+                } else if (response == "CPS NOK\n") {
+                    std::cerr << "Failed to change password" << std::endl;
+                    break;
+                } else if (response == "CPS ERR\n") {
+                    std::cerr << "Error changing password" << std::endl;
+                    break;
+                }
                 break;
             default:
                 std::cerr << "Unknown command: " << command << std::endl;
