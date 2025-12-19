@@ -1,4 +1,6 @@
 #include <iostream>
+#include <sstream>
+#include <iomanip>
 #include <unordered_map>
 #include <set>
 #include <chrono>
@@ -12,6 +14,10 @@ int next_eid = 1;
 std::unordered_map<std::string, std::set<int>> events_by_uid;
 std::unordered_map<std::string, std::vector<Reservation>> reservations_by_uid;
 
+bool space_for_new_event() {
+    return next_eid < 999;
+}
+
 int new_eid() {
     if(next_eid > 999) {
         return -1;
@@ -19,11 +25,8 @@ int new_eid() {
     return next_eid++;
 }
 
-int add_event(std::string uid, std::string name, std::string file_name, std::string date_time, int total_seats) {
+std::string add_event(std::string uid, std::string name, std::string file_name, std::string date_time, int total_seats) {
     int eid = new_eid();
-    if (eid == -1) {
-        return -1;
-    }
 
     Event event;
     event.owner_uid = uid;
@@ -37,7 +40,11 @@ int add_event(std::string uid, std::string name, std::string file_name, std::str
     events[eid] = event;
     events_by_uid[uid].insert(eid);
 
-    return eid;
+    std::ostringstream oss;
+    oss << std::setw(3) << std::setfill('0') << eid;
+    std::string eid_str = oss.str();
+    std::string message = "RCE OK " + eid_str;
+    return message;
 } 
 
 bool event_exist(int eid) {
