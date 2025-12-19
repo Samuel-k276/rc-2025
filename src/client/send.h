@@ -1,7 +1,7 @@
 #ifndef SEND_H
 #define SEND_H
 
-#include "command.h"
+#include "input_handler.h"
 #include <netdb.h>
 #include <string>
 

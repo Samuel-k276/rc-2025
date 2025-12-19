@@ -1,5 +1,5 @@
-#ifndef COMMAND_H
-#define COMMAND_H
+#ifndef INPUT_HANDLER_H
+#define INPUT_HANDLER_H
 
 #include <string>
 #include <unordered_map>
@@ -169,3 +169,4 @@ bool parse_show_event_details_input(std::stringstream &args, std::string &messag
 bool parse_reserve_input(std::stringstream &args, std::string &message);
 
 #endif
+

@@ -1,4 +1,4 @@
-#include "command.h"
+#include "input_handler.h"
 #include "../common/constants.h"
 #include "../common/date.h"
 #include "../common/input.h"
@@ -232,3 +232,4 @@ bool parse_change_pass_input(std::stringstream &args, std::string &message) {
     message = command_to_string.at(CHANGE_PASS) + " " + uid + " " + old_password + " " + new_password + "\n";
     return true;
 }
+

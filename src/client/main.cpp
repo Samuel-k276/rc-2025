@@ -12,7 +12,7 @@
 #include <unistd.h>
 
 #include "../common/constants.h"
-#include "command.h"
+#include "input_handler.h"
 #include "response_handler.h"
 #include "send.h"
 #include "session.h"
