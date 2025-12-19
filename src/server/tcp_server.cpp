@@ -218,9 +218,13 @@ void handle_tcp_client(int client_fd) {
     }
 
     buffer[bytes_read] = '\0';
-    std::cout << "[TCP] Received message: " << buffer << std::endl;
-
     std::string message = std::string(buffer);
+    
+    // Remove trailing newline and whitespace for logging
+    while (!message.empty() && (message.back() == '\n' || message.back() == '\r' || message.back() == ' ')) {
+        message.pop_back();
+    }
+    std::cout << "[TCP] Received message: " << message << std::endl;
 
     const CommandType command_type = get_command_type(message.substr(0, CMD_LENGTH));
     switch (command_type) {
@@ -279,12 +283,6 @@ void handle_tcp_client(int client_fd) {
             send(client_fd, "ERR\n", 4, 0);
             break;
     }
-    
-    // Remove trailing newline if present for logging
-    if (!message.empty() && message.back() == '\n') {
-        message.pop_back();
-    }
-    std::cout << "[TCP] Received message: " << message << std::endl;
 
     // Shutdown write side to signal that we're done sending
     // This allows the client to detect EOF and close gracefully

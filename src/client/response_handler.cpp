@@ -275,25 +275,21 @@ void handle_show_event_details_response(const std::string &response) {
 }
 
 void handle_reserve_response(const std::string &response) {
-    if (response.substr(0, 7) == "RRI ACC\n") {
+    if (response.substr(0, 7) == "PRI ACC\n") {
         std::cout << "accepted" << std::endl;
-    } else if (response.substr(0, 7) == "RRI REJ ") {
-        // Extract remaining seats: RRI REJ n_seats\n
-        std::stringstream ss(response);
-        std::string status, rej, n_seats;
-        ss >> status >> rej >> n_seats;
-        std::cout << "refused (remaining seats: " << n_seats << ")" << std::endl;
-    } else if (response.substr(0, 8) == "RRI NOK\n") {
-        std::cout << "event is no longer active" << std::endl;
-    } else if (response.substr(0, 8) == "RRI NLG\n") {
+    } else if (response.substr(0, 8) == "PRI REJ\n") {
+        std::cout << "refused" << std::endl;
+    } else if (response.substr(0, 8) == "PRI NOK\n") {
+        std::cout << "event does not exist" << std::endl;
+    } else if (response.substr(0, 8) == "PRI NLG\n") {
         std::cerr << "User is not logged in" << std::endl;
-    } else if (response.substr(0, 8) == "RRI CLS\n") {
-        std::cout << "event is no longer active" << std::endl;
-    } else if (response.substr(0, 8) == "RRI SLD\n") {
-        std::cout << "event is no longer active" << std::endl;
-    } else if (response.substr(0, 8) == "RRI PST\n") {
-        std::cout << "event is no longer active" << std::endl;
-    } else if (response.substr(0, 8) == "RRI WRP\n") {
+    } else if (response.substr(0, 8) == "PRI CLO\n") {
+        std::cout << "event is closed" << std::endl;
+    } else if (response.substr(0, 8) == "PRI SLD\n") {
+        std::cout << "event is sold out" << std::endl;
+    } else if (response.substr(0, 8) == "PRI PST\n") {
+        std::cout << "event is in the past" << std::endl;
+    } else if (response.substr(0, 8) == "PRI WRP\n") {
         std::cerr << "Password is incorrect" << std::endl;
     } else if (response.substr(0, 4) == "ERR\n") {
         std::cerr << "Invalid command syntax or parameters" << std::endl;
