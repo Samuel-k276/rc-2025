@@ -5,10 +5,9 @@
 #include <tuple>
 #include <vector>
 
-// Initialize storage directories (USERS and EVENTS)
 void init_storage();
 
-// User persistence functions
+// User file operations
 void save_user_password(const std::string &uid, const std::string &password);
 void create_user_login_file(const std::string &uid);
 void remove_user_login_file(const std::string &uid);
@@ -17,7 +16,7 @@ bool user_password_exists(const std::string &uid);
 bool user_login_exists(const std::string &uid);
 std::string load_user_password(const std::string &uid);
 
-// Event persistence functions
+// Event file operations
 void create_event_directory(int eid);
 void save_event_start(int eid, const std::string &uid, const std::string &name, const std::string &desc_fname,
                       int event_attend, const std::string &start_date, const std::string &start_time);
@@ -37,11 +36,11 @@ bool parse_event_start_info(const std::string &info, std::string &uid, std::stri
 std::vector<int> get_user_created_events(const std::string &uid);
 std::vector<std::tuple<int, std::string, int>> get_user_reservations_from_disk(const std::string &uid);
 
-// Reservation persistence functions
+// Reservation file operations
 void save_reservation(int eid, const std::string &uid, int res_num, const std::string &res_datetime);
 void add_reservation_to_user_reserved(const std::string &uid, int eid, int res_num, const std::string &res_datetime);
 
-// Utility functions
+// Helper functions
 std::string get_current_datetime();
 std::string format_eid(int eid);
 bool check_and_close_expired_event(int eid);

@@ -21,7 +21,6 @@ int new_eid() {
     return next_eid;
 }
 
-// Load event from disk
 Event load_event_from_disk(int eid) {
     Event event;
     event.owner_uid = "";
@@ -47,8 +46,7 @@ Event load_event_from_disk(int eid) {
         event.date_time = date_time;
         event.total_seats = event_attend;
         event.reserved_seats = load_event_reserved_seats(eid);
-        // Don't call get_event_status here to avoid recursion - state will be calculated when needed
-        event.state = 1; // Default state
+        event.state = 1; // default state, will be recalculated when needed
     }
 
     return event;
@@ -62,7 +60,6 @@ std::string list_events() {
         Event e = load_event_from_disk(eid);
         if (e.owner_uid.empty()) continue;
 
-        // Check and update event status (may close expired events)
         int state = get_event_status(eid);
 
         message += " " + std::to_string(eid) + " " + e.name + " " + std::to_string(state) + " " + e.date_time;
@@ -79,12 +76,10 @@ std::string add_event(std::string uid, std::string name, std::string file_name, 
         return "RCE NOK\n";
     }
 
-    // Persist event to disk
     create_event_directory(eid);
 
-    // Parse date_time (format: dd-mm-yyyy hh:mm)
-    std::string start_date = date_time.substr(0, 10); // dd-mm-yyyy
-    std::string start_time = date_time.substr(11, 5); // hh:mm
+    std::string start_date = date_time.substr(0, 10);
+    std::string start_time = date_time.substr(11, 5);
 
     save_event_start(eid, uid, name, file_name, total_seats, start_date, start_time);
     save_event_res_file(eid, 0);
@@ -116,8 +111,7 @@ std::string get_user_events(std::string uid) {
 }
 
 Event *get_event(int eid) {
-    // This is a bit tricky since we don't have memory storage anymore
-    // We'll use a static variable to return a pointer, but it's only valid until next call
+    // Returns pointer to static variable - only valid until next call
     static Event cached_event;
     cached_event = load_event_from_disk(eid);
     return &cached_event;
@@ -128,25 +122,22 @@ int get_event_status(int eid) {
         return -1;
     }
 
-    // Check if END file exists (event was manually closed or expired)
     if (event_end_exists(eid)) {
-        return 3; // Closed
+        return 3; // closed
     }
 
     Event e = load_event_from_disk(eid);
     if (e.owner_uid.empty()) {
-        return -1; // Event not properly loaded
+        return -1;
     }
 
-    int state = 1; // Default state
-
-    // Determine state based on reserved seats and date
+    int state = 1;
     int reserved_seats = load_event_reserved_seats(eid);
     if (e.total_seats > 0 && reserved_seats >= e.total_seats) {
-        state = 2; // Sold out
+        state = 2; // sold out
     }
 
-    // Check if event has expired (date in the past) and close it if needed
+    // Check if event date has passed and close it if needed
     std::string date_time = e.date_time;
     if (!date_time.empty() && date_time.length() >= 16) {
         try {
@@ -169,13 +160,12 @@ int get_event_status(int eid) {
             std::time_t event_time = std::mktime(&event_tm);
             std::time_t current_time = std::time(nullptr);
 
-            // If event date has passed, close it
             if (event_time < current_time) {
                 close_event(eid);
-                return 0; // Past
+                return 0; // past
             }
         } catch (...) {
-            // If parsing fails, skip expiration check
+            // skip expiration check if date parsing fails
         }
     }
 
@@ -188,7 +178,6 @@ bool owner_of_event(std::string uid, int eid) {
 }
 
 void close_event(int eid) {
-    // Persist event closure to disk
     std::string end_datetime = get_current_datetime();
     save_event_end(eid, end_datetime);
 }
@@ -225,7 +214,7 @@ std::string get_user_reservations(std::string uid) {
     std::string message = "RMR OK";
     std::vector<std::tuple<int, std::string, int>> reservations = get_user_reservations_from_disk(uid);
 
-    // Get last 50 reservations
+    // Only return the last 50 reservations
     int start = std::max(0, (int)reservations.size() - 50);
     for (size_t i = start; i < reservations.size(); ++i) {
         int eid = std::get<0>(reservations[i]);

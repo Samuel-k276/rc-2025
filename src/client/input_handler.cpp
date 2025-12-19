@@ -13,6 +13,8 @@ bool is_valid_client_command(std::string command) { return user_commands.find(co
 
 UserCommand get_command(std::string command) { return user_commands.at(command); }
 
+// Build LIN UID password - login command (UDP)
+// Format: LIN UID password\n
 bool parse_login_input(std::stringstream &args, std::string &message) {
     std::string uid, password;
     if (!(args >> uid >> password)) {
@@ -33,6 +35,8 @@ bool parse_login_input(std::stringstream &args, std::string &message) {
     return true;
 }
 
+// Build LOU UID password - logout command (UDP)
+// Format: LOU UID password\n
 bool parse_logout_input(std::stringstream &args, std::string &message) {
     std::string extra;
     if (args >> extra) {
@@ -45,6 +49,8 @@ bool parse_logout_input(std::stringstream &args, std::string &message) {
     return true;
 }
 
+// Build UNR UID password - unregister command (UDP)
+// Format: UNR UID password\n
 bool parse_unregister_input(std::stringstream &args, std::string &message) {
     std::string extra;
     if (args >> extra) {
@@ -57,6 +63,8 @@ bool parse_unregister_input(std::stringstream &args, std::string &message) {
     return true;
 }
 
+// Build LME UID password - list my events command (UDP)
+// Format: LME UID password\n
 bool parse_myevents_input(std::stringstream &args, std::string &message) {
     std::string extra;
     if (args >> extra) {
@@ -107,6 +115,9 @@ bool get_file_data(std::string event_fname, std::string &Fdata, std::string &Fsi
     return true;
 }
 
+// Build CRE UID password name event_date attendance_size Fname Fsize Fdata - create event command (TCP)
+// Format: CRE UID password name event_date attendance_size Fname Fsize Fdata\n
+// event_date format: dd-mm-yyyy hh:mm
 bool parse_create_event_input(std::stringstream &args, std::string &message) {
     std::string name, event_fname, date, time, num_attendees;
     if (!(args >> name >> event_fname >> date >> time >> num_attendees)) {
@@ -144,6 +155,8 @@ bool is_valid_eid(std::string eid) {
     return eid.length() == 3 && std::all_of(eid.begin(), eid.end(), ::isdigit) && std::stoi(eid) > 0;
 }
 
+// Build CLS UID password EID - close event command (TCP)
+// Format: CLS UID password EID\n
 bool parse_close_event_input(std::stringstream &args, std::string &message) {
     std::string event_id;
     if (!(args >> event_id)) {
@@ -160,6 +173,8 @@ bool parse_close_event_input(std::stringstream &args, std::string &message) {
     return true;
 }
 
+// Build LST - list events command (TCP)
+// Format: LST\n
 bool parse_list_events_input(std::stringstream &args, std::string &message) {
     std::string extra;
     if (args >> extra) {
@@ -170,6 +185,8 @@ bool parse_list_events_input(std::stringstream &args, std::string &message) {
     return true;
 }
 
+// Build SED EID - show event details command (TCP)
+// Format: SED EID\n
 bool parse_show_event_details_input(std::stringstream &args, std::string &message) {
     std::string event_id;
     if (!(args >> event_id)) {
@@ -184,6 +201,8 @@ bool parse_show_event_details_input(std::stringstream &args, std::string &messag
     return true;
 }
 
+// Build RID UID password EID people - reserve command (TCP)
+// Format: RID UID password EID people\n
 bool parse_reserve_input(std::stringstream &args, std::string &message) {
     std::string event_id, num_seats;
     if (!(args >> event_id >> num_seats)) {
@@ -200,6 +219,8 @@ bool parse_reserve_input(std::stringstream &args, std::string &message) {
     return true;
 }
 
+// Build CPS UID oldPassword newPassword - change password command (TCP)
+// Format: CPS UID oldPassword newPassword\n
 bool parse_change_pass_input(std::stringstream &args, std::string &message) {
     std::string old_password, new_password;
     if (!(args >> old_password >> new_password)) {

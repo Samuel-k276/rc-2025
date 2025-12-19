@@ -173,7 +173,6 @@ void handle_udp_message(int socket_fd, bool verbose) {
     const CommandType command_type = get_command_type(command_code);
     std::string uid = "";
     
-    // Extract UID for verbose output (if available in the message)
     switch (command_type) {
         case LOGIN: {
             std::string password;

@@ -149,7 +149,6 @@ void reserve(std::string uid, std::string password, std::string eid, std::string
         return;
     }
     if (!enough_seats(stoi(eid), stoi(number_of_people))) {
-        // Calculate remaining seats
         Event e = load_event_from_disk(stoi(eid));
         int reserved_seats = load_event_reserved_seats(stoi(eid));
         int remaining_seats = e.total_seats - reserved_seats;
@@ -223,25 +222,47 @@ void init_tcp_server(char *port, int &socket_fd, struct addrinfo &hints, struct 
 }
 
 void handle_tcp_client(int client_fd, bool verbose, struct sockaddr_in &client_addr) {
-    char buffer[MAX_MESSAGE_LENGTH];
-    int bytes_read;
+    // Read complete message - may need multiple reads for large messages (e.g., CREATE with file data)
+    std::string message;
+    char buffer[4096];
+    int total_bytes = 0;
+    bool found_newline = false;
 
-    bytes_read = read(client_fd, buffer, sizeof(buffer));
-    if (bytes_read == -1) {
-        std::cerr << "[TCP] Failed to read from client" << std::endl;
+    while (!found_newline && total_bytes < MAX_TCP_MESSAGE_LENGTH) {
+        int bytes_read = read(client_fd, buffer, sizeof(buffer) - 1);
+        if (bytes_read == -1) {
+            std::cerr << "[TCP] Failed to read from client" << std::endl;
+            close(client_fd);
+            return;
+        }
+
+        if (bytes_read == 0) {
+            // Client closed connection
+            if (message.empty()) {
+                close(client_fd);
+                return;
+            }
+            break; // Use what we have
+        }
+
+        buffer[bytes_read] = '\0';
+        message += std::string(buffer, bytes_read);
+        total_bytes += bytes_read;
+
+        // Check if we received the newline terminator
+        if (message.find('\n') != std::string::npos) {
+            found_newline = true;
+        }
+    }
+
+    if (total_bytes >= MAX_TCP_MESSAGE_LENGTH && !found_newline) {
+        std::cerr << "[TCP] Message too large or incomplete" << std::endl;
+        send(client_fd, "ERR\n", 4, 0);
         close(client_fd);
         return;
     }
-
-    if (bytes_read == 0) {
-        // Client closed connection before sending data
-        close(client_fd);
-        return;
-    }
-
-    buffer[bytes_read] = '\0';
-    std::string message = std::string(buffer);
     
+    // Trim trailing whitespace and newlines
     while (!message.empty() && (message.back() == '\n' || message.back() == '\r' || message.back() == ' ')) {
         message.pop_back();
     }

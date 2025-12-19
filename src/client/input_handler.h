@@ -115,10 +115,10 @@ bool parse_change_pass_input(std::stringstream &args, std::string &message);
 bool parse_unregister_input(std::stringstream &args, std::string &message);
 
 /**
- * Parse the myevnts input and return the message in the format "MEE <uid> <password>".
+ * Parse the myevents input and return the message in the format "LME <uid> <password>".
  * @param args: arguments
  * @param message: message
- * @return bool: true if the unregister input is parsed successfully, false otherwise
+ * @return bool: true if the myevents input is parsed successfully, false otherwise
  */
 bool parse_myevents_input(std::stringstream &args, std::string &message);
 /**
@@ -129,7 +129,7 @@ bool parse_myevents_input(std::stringstream &args, std::string &message);
 bool parse_exit_input(std::stringstream &args);
 
 /**
- * Parse the create event input and return the message.
+ * Parse the create event input and return the message in the format "CRE <uid> <password> <name> <event_date> <attendance_size> <fname> <fsize> <fdata>".
  * @param args: arguments
  * @param message: message
  * @return bool: true if the create event input is parsed successfully, false otherwise
@@ -137,7 +137,7 @@ bool parse_exit_input(std::stringstream &args);
 bool parse_create_event_input(std::stringstream &args, std::string &message);
 
 /**
- * Parse the close event input and return the message.
+ * Parse the close event input and return the message in the format "CLS <uid> <password> <eid>".
  * @param args: arguments
  * @param message: message
  * @return bool: true if the close event input is parsed successfully, false otherwise
@@ -145,7 +145,7 @@ bool parse_create_event_input(std::stringstream &args, std::string &message);
 bool parse_close_event_input(std::stringstream &args, std::string &message);
 
 /**
- * Parse the list events input and return the message.
+ * Parse the list events input and return the message in the format "LST".
  * @param args: arguments
  * @param message: message
  * @return bool: true if the list events input is parsed successfully, false otherwise
@@ -153,7 +153,7 @@ bool parse_close_event_input(std::stringstream &args, std::string &message);
 bool parse_list_events_input(std::stringstream &args, std::string &message);
 
 /**
- * Parse the show event details input and return the message.
+ * Parse the show event details input and return the message in the format "SED <eid>".
  * @param args: arguments
  * @param message: message
  * @return bool: true if the show event details input is parsed successfully, false otherwise
@@ -161,7 +161,7 @@ bool parse_list_events_input(std::stringstream &args, std::string &message);
 bool parse_show_event_details_input(std::stringstream &args, std::string &message);
 
 /**
- * Parse the reserve input and return the message.
+ * Parse the reserve input and return the message in the format "RID <uid> <password> <eid> <number_of_people>".
  * @param args: arguments
  * @param message: message
  * @return bool: true if the reserve input is parsed successfully, false otherwise

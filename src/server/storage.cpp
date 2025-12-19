@@ -114,7 +114,6 @@ std::string load_user_password(const std::string &uid) {
     return "";
 }
 
-// Event persistence functions
 void create_event_directory(int eid) {
     std::string eid_str = format_eid(eid);
     std::string event_dir = "src/server/storage/EVENTS/" + eid_str;
@@ -406,7 +405,6 @@ std::vector<std::tuple<int, std::string, int>> get_user_reservations_from_disk(c
     std::vector<std::tuple<int, std::string, int>> reservations;
     std::string reserved_dir = "src/server/storage/USERS/" + uid + "/RESERVED";
 
-    // Get all event IDs once
     std::vector<int> all_eids = get_all_event_ids();
 
     DIR *dir = opendir(reserved_dir.c_str());

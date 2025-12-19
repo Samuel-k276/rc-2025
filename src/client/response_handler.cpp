@@ -6,6 +6,13 @@
 #include <sstream>
 #include <unistd.h>
 
+// Handle RLI status - login response (UDP)
+// Expected formats: RLI OK\n, RLI REG\n, RLI NOK\n, ERR\n
+// Status meanings:
+//   OK - user was registered and password matches, user is now logged in
+//   REG - user was not registered, ES registered and logged in the user
+//   NOK - user exists but password is incorrect
+//   ERR - invalid command syntax or parameters
 void handle_login_response(const std::string &response) {
     if (response.substr(0, 7) == "RLI OK\n") {
         std::cout << "successful login" << std::endl;
@@ -25,6 +32,14 @@ void handle_login_response(const std::string &response) {
     }
 }
 
+// Handle RLO status - logout response (UDP)
+// Expected formats: RLO OK\n, RLO NOK\n, RLO UNR\n, RLO WRP\n, ERR\n
+// Status meanings:
+//   OK - user was logged in and is now logged out
+//   NOK - user was not logged in
+//   UNR - user was not registered
+//   WRP - password is incorrect
+//   ERR - invalid command syntax or parameters
 void handle_logout_response(const std::string &response) {
     if (response.substr(0, 7) == "RLO OK\n") {
         std::cout << "successful logout" << std::endl;
@@ -42,6 +57,14 @@ void handle_logout_response(const std::string &response) {
     }
 }
 
+// Handle RUR status - unregister response (UDP)
+// Expected formats: RUR OK\n, RUR NOK\n, RUR UNR\n, RUR WRP\n, ERR\n
+// Status meanings:
+//   OK - user was registered and logged in, user is now unregistered
+//   NOK - user was not logged in
+//   UNR - user was not registered
+//   WRP - password is incorrect
+//   ERR - invalid command syntax or parameters
 void handle_unregister_response(const std::string &response) {
     if (response.substr(0, 7) == "RUR OK\n") {
         std::cout << "successful unregister" << std::endl;
@@ -57,10 +80,17 @@ void handle_unregister_response(const std::string &response) {
     }
 }
 
+// Handle RCP status - change password response (TCP)
+// Expected formats: RCP OK\n, RCP NLG\n, RCP NOK\n, RCP NID\n, ERR\n
+// Status meanings:
+//   OK - user was logged in and oldPassword matches, password changed to newPassword
+//   NLG - user was not logged in
+//   NOK - oldPassword is incorrect
+//   NID - user does not exist
+//   ERR - invalid command syntax or parameters
 void handle_change_pass_response(const std::string &response) {
     if (response.substr(0, 7) == "RCP OK\n") {
         std::cout << "successful password change" << std::endl;
-        // Update local session password (same logic as login - promote temp to user)
         promote_temp_user_to_user();
     } else if (response.substr(0, 8) == "RCP NLG\n") {
         std::cout << "user not logged In" << std::endl;
@@ -80,13 +110,20 @@ void handle_change_pass_response(const std::string &response) {
     }
 }
 
+// Handle RME status [EID state]* - my events response (UDP)
+// Expected formats: RME OK EID1 state1 EID2 state2 ...\n, RME NOK\n, RME NLG\n, RME WRP\n, ERR\n
+// Status meanings:
+//   OK - list of events with their states (state: 1=accepting reservations, 0=past, 2=sold out, 3=closed)
+//   NOK - user has not created any events
+//   NLG - user is not logged in
+//   WRP - password is incorrect
+//   ERR - invalid command syntax or parameters
 void handle_myevents_response(const std::string &response) {
     if (response.substr(0, 7) == "RME OK ") {
-        // Parse and display events: RME OK EID1 state1 EID2 state2 ...
         std::stringstream ss(response);
         std::string status, eid, state;
-        ss >> status; // RME
-        ss >> status; // OK
+        ss >> status; // skip "RME"
+        ss >> status; // skip "OK"
         while (ss >> eid >> state) {
             std::string state_desc;
             if (state == "1")
@@ -114,13 +151,19 @@ void handle_myevents_response(const std::string &response) {
     }
 }
 
+// Handle RMR status [EID date value]* - my reservations response (UDP)
+// Expected formats: RMR OK EID1 date1 time1 value1 EID2 date2 time2 value2 ...\n, RMR NOK\n, RMR NLG\n, RMR WRP\n, ERR\n
+// Status meanings:
+//   OK - list of reservations with EID, date/time (dd-mm-yyyy hh:mm:ss), and number of seats reserved
+//   NOK - user has not made any reservations
+//   NLG - user is not logged in
+//   WRP - password is incorrect
+//   ERR - invalid command syntax or parameters
 void handle_myreservations_response(const std::string &response) {
     if (response.substr(0, 7) == "RMR OK ") {
-        // Parse and display reservations: RMR OK EID1 date1 time1 value1 EID2 date2 time2 value2 ...
-        // timestamp format: "dd-mm-yyyy hh:mm:ss" (e.g., "19-12-2025 20:04:53")
         std::stringstream ss(response);
         std::string status, eid, date_part, time_part, value;
-        ss >> status >> status; // RMR OK
+        ss >> status >> status; // skip "RMR OK"
         while (ss >> eid >> date_part >> time_part >> value) {
             std::string timestamp = date_part + " " + time_part;
             std::cout << "Reservation: Event " << eid << " - " << timestamp << " (" << value << " seats)"
@@ -139,12 +182,19 @@ void handle_myreservations_response(const std::string &response) {
     }
 }
 
+// Handle RCE status [EID] - create event response (TCP)
+// Expected formats: RCE OK EID\n, RCE NOK\n, RCE NLG\n, RCE WRP\n, ERR\n
+// Status meanings:
+//   OK EID - event created successfully, EID is the unique 3-digit event identifier (001-999)
+//   NOK - event could not be created (invalid parameters or no space available)
+//   NLG - user is not logged in
+//   WRP - password is incorrect
+//   ERR - invalid command syntax or parameters
 void handle_create_event_response(const std::string &response) {
     if (response.substr(0, 7) == "RCE OK ") {
-        // Extract EID from response: RCE OK EID\n
         std::stringstream ss(response);
         std::string status, eid;
-        ss >> status >> status >> eid; // RCE OK EID
+        ss >> status >> status >> eid; // skip "RCE OK", get EID
         std::cout << "Event created successfully with EID: " << eid << std::endl;
     } else if (response.substr(0, 8) == "RCE NOK\n") {
         std::cerr << "Failed to create event (invalid parameters or no space)" << std::endl;
@@ -159,6 +209,18 @@ void handle_create_event_response(const std::string &response) {
     }
 }
 
+// Handle RCL status - close event response (TCP)
+// Expected formats: RCL OK\n, RCL NOK\n, RCL NLG\n, RCL NOE\n, RCL EOW\n, RCL SLD\n, RCL PST\n, RCL CLO\n, ERR\n
+// Status meanings:
+//   OK - event was open, created by user, and successfully closed
+//   NOK - user does not exist or password is incorrect
+//   NLG - user is not logged in
+//   NOE - event does not exist
+//   EOW - event is not owned by user
+//   SLD - event is already sold out
+//   PST - event date has already passed
+//   CLO - event was previously closed by user
+//   ERR - invalid command syntax or parameters
 void handle_close_event_response(const std::string &response) {
     if (response.substr(0, 7) == "RCL OK\n") {
         std::cout << "Event closed successfully" << std::endl;
@@ -183,12 +245,19 @@ void handle_close_event_response(const std::string &response) {
     }
 }
 
+// Handle RLS status [EID name state event_date]* - list events response (TCP)
+// Expected formats: RLS OK EID1 name1 state1 event_date1 EID2 name2 state2 event_date2 ...\n\n, RLS NOK\n, ERR\n
+// Status meanings:
+//   OK - list of all events with EID, name, state, and event_date (dd-mm-yyyy hh:mm)
+//        state: 1=future not sold out, 0=past, 2=future sold out, 3=closed
+//        list ends with \n\n
+//   NOK - no events have been created yet
+//   ERR - invalid command syntax or parameters
 void handle_list_events_response(const std::string &response) {
     if (response.substr(0, 7) == "RLS OK ") {
-        // Parse and display events: RLS OK EID1 name1 state1 event_date1 EID2 name2 state2 event_date2 ...\n\n
         std::stringstream ss(response);
         std::string status, eid, name, state, date, time;
-        ss >> status >> status; // RLS OK
+        ss >> status >> status; // skip "RLS OK"
         while (ss >> eid >> name >> state >> date >> time) {
             std::string state_desc;
             if (state == "1")
@@ -213,38 +282,41 @@ void handle_list_events_response(const std::string &response) {
     }
 }
 
+// Handle RSE status [UID name event_date attendance_size Seats_reserved Fname Fsize Fdata] - show event details response (TCP)
+// Expected formats: RSE OK UID name event_date attendance_size Seats_reserved Fname Fsize Fdata\n, RSE NOK\n, ERR\n
+// Status meanings:
+//   OK - event details with owner UID, name, event_date (dd-mm-yyyy hh:mm), total seats, reserved seats, filename, file size, and file data
+//   NOK - event does not exist or other error (no file to send)
+//   ERR - invalid command syntax or parameters
 void handle_show_event_details_response(const std::string &response) {
     if (response.substr(0, 7) == "RSE OK ") {
-        // Parse response: RSE OK UID name event_date attendance_size Seats_reserved Fname Fsize Fdata
-        // Note: event_date contains space (format: "dd-mm-yyyy hh:mm")
         std::stringstream ss(response);
         std::string status, ok, uid, name, date_part, time_part, attendance_size, seats_reserved, fname, fsize;
-        ss >> status >> ok; // RSE OK
+        ss >> status >> ok; // skip "RSE OK"
         ss >> uid >> name >> date_part >> time_part >> attendance_size >> seats_reserved >> fname >> fsize;
         
         std::string event_date = date_part + " " + time_part;
 
-        // Extract file data (rest of the response after fsize)
-        // Find position after "fname fsize " pattern to avoid finding fsize elsewhere
+        // File data comes after fname and fsize, need to extract it carefully
+        // since fsize might appear elsewhere in the response
         std::string fname_fsize_pattern = fname + " " + fsize + " ";
         size_t pattern_pos = response.find(fname_fsize_pattern);
         std::string fdata;
         if (pattern_pos != std::string::npos) {
             size_t fdata_start = pattern_pos + fname_fsize_pattern.length();
-            // Read until newline (if present)
             size_t fdata_end = response.find('\n', fdata_start);
             if (fdata_end == std::string::npos) {
                 fdata_end = response.length();
             }
             fdata = response.substr(fdata_start, fdata_end - fdata_start);
         } else {
-            // Fallback: try to find fsize after fname
+            // Fallback if pattern matching fails
             size_t fname_pos = response.find(fname);
             if (fname_pos != std::string::npos) {
                 size_t search_start = fname_pos + fname.length();
                 size_t fsize_pos = response.find(" " + fsize + " ", search_start);
                 if (fsize_pos != std::string::npos) {
-                    size_t fdata_start = fsize_pos + fsize.length() + 2; // +2 for " " and " "
+                    size_t fdata_start = fsize_pos + fsize.length() + 2;
                     size_t fdata_end = response.find('\n', fdata_start);
                     if (fdata_end == std::string::npos) {
                         fdata_end = response.length();
@@ -254,32 +326,28 @@ void handle_show_event_details_response(const std::string &response) {
             }
         }
 
-        // Determine event status: sold-out if reserved >= total
         int reserved = std::stoi(seats_reserved);
         int total = std::stoi(attendance_size);
         std::string status_info = "";
         if (reserved >= total && total > 0) {
             status_info = " (sold-out)";
         }
-        // Note: We can't determine if event is closed from the response alone
-        // The server would need to include this info, but for now we only show sold-out
 
-        // Display event details: UID name event_date attendance_size Seats_reserved [status]
-        std::cout << uid << " " << name << " " << event_date << " " << attendance_size << " " 
-                  << seats_reserved << status_info << std::endl;
-
-        // Save file locally and display file info
+        // Save the description file to disk
         std::ofstream file(fname, std::ios::binary);
         if (file.is_open()) {
             file.write(fdata.c_str(), fdata.length());
             file.close();
-            // Get current directory for display
             char cwd[1024];
+            std::string file_path;
             if (getcwd(cwd, sizeof(cwd)) != nullptr) {
-                std::cout << fname << " " << fsize << " " << cwd << "/" << fname << std::endl;
+                file_path = std::string(cwd) + "/" + fname;
             } else {
-                std::cout << fname << " " << fsize << " " << fname << std::endl;
+                file_path = fname;
             }
+            // Print everything on the same line
+            std::cout << uid << " " << name << " " << event_date << " " << attendance_size << " " 
+                      << seats_reserved << status_info << " " << fname << " " << fsize << " " << file_path << std::endl;
         } else {
             std::cerr << "Failed to save file: " << fname << std::endl;
         }
@@ -292,14 +360,25 @@ void handle_show_event_details_response(const std::string &response) {
     }
 }
 
+// Handle RRI status [n_seats] - reserve response (TCP)
+// Expected formats: RRI ACC\n, RRI REJ n_seats\n, RRI NOK\n, RRI NLG\n, RRI CLO\n, RRI SLD\n, RRI PST\n, RRI WRP\n, ERR\n
+// Status meanings:
+//   ACC - reservation accepted, can be fulfilled
+//   REJ n_seats - reservation rejected, requested places > remaining places, n_seats is the number of remaining seats
+//   NOK - event is not active
+//   NLG - user is not logged in
+//   CLO - event is closed
+//   SLD - event is sold out
+//   PST - event date has passed
+//   WRP - password is incorrect
+//   ERR - invalid command syntax or parameters
 void handle_reserve_response(const std::string &response) {
     if (response.substr(0, 8) == "RRI ACC\n") {
         std::cout << "accepted" << std::endl;
     } else if (response.substr(0, 7) == "RRI REJ ") {
-        // Parse RRI REJ n_seats\n
         std::stringstream ss(response);
         std::string status, rej, n_seats;
-        ss >> status >> rej >> n_seats;
+        ss >> status >> rej >> n_seats; // get remaining seats count
         std::cout << "refused " << n_seats << std::endl;
     } else if (response.substr(0, 8) == "RRI NOK\n") {
         std::cout << "event is no longer active" << std::endl;

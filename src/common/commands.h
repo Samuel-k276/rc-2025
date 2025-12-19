@@ -31,31 +31,8 @@ const static std::unordered_map<std::string, CommandType> CommandTCPMap = {
     {"SED", SHOW_EVENT_DETAILS}, {"RID", RESERVE},     {"CPS", CHANGE_PASS},
 };
 
-/**
- * Check if a UDP command is valid.
- * @param command: command
- * @return bool: true if the command is valid, false otherwise
- */
 bool is_valid_command_udp(std::string command);
-
-/**
- * Check if a TCP command is valid.
- * @param command: command
- * @return bool: true if the command is valid, false otherwise
- */
 bool is_valid_command_tcp(std::string command);
-
-/**
- * Check if a command is valid.
- * @param command: command
- * @return bool: true if the command is valid, false otherwise
- */
 bool is_valid_command(std::string command);
-
-/**
- * Get the command type from a command.
- * @param command: command
- * @return CommandType: command type
- */
 CommandType get_command_type(std::string command);
 #endif

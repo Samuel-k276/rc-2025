@@ -20,14 +20,9 @@
 struct addrinfo hints, *res;
 
 char *ESIP = (char *)"127.0.0.1";
-char *ESport = (char *)"58011"; // Group 11 + 50000
+char *ESport = (char *)"58011"; // default port for group 11
 
-/**
- * Get the command and arguments from a buffer with return.
- * @param buffer: buffer
- * @param command: command
- * @return std::stringstream: the stream with the arguments
- */
+// Extract command from input buffer and return stream with remaining arguments
 std::stringstream get_command_and_args_with_return(char *buffer, std::string &command) {
     std::stringstream ss(buffer);
     if (ss >> command) {
@@ -61,9 +56,8 @@ int main(int argc, char *argv[]) {
     }
 
     memset(&hints, 0, sizeof(hints));
-    hints.ai_family = AF_INET;      // IPv4
-    hints.ai_socktype = SOCK_DGRAM; // UDP socket
-    // hints.ai_socktype = SOCK_STREAM; // TCP socket
+    hints.ai_family = AF_INET;
+    hints.ai_socktype = SOCK_DGRAM;
 
     int error = getaddrinfo(ESIP, ESport, &hints, &res);
     if (error != 0) {
@@ -136,6 +130,8 @@ int main(int argc, char *argv[]) {
                 break;
             }
             case MYRESERVATIONS: {
+                // Build LMR UID password - list my reservations command (UDP)
+                // Format: LMR UID password\n
                 std::string extra;
                 if (args >> extra) {
                     std::cerr << "Invalid myreservations arguments" << std::endl;

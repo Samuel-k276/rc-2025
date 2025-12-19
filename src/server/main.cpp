@@ -11,18 +11,8 @@
 #include "tcp_server.h"
 #include "udp_server.h"
 
-/**
- * Server port
- * Group 11 + 50000 is the default port for the server.
- */
-char *port = (char *)"58011";
-
-/**
- * Verbose mode
- * It outputs to the screen a short description of the received requests
- * (UID, type of request), and the IP and port originating those requests.
- */
-bool verbose = false;
+char *port = (char *)"58011"; // default port for group 11
+bool verbose = false; // when enabled, prints request details (UID, command, IP, port)
 
 int main(int argc, char *argv[]) {
     int opt;
@@ -40,15 +30,12 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    // Initialize storage directories
     init_storage();
 
-    // Initialize TCP server
     int tcp_socket_fd;
     struct addrinfo tcp_hints, *tcp_res;
     init_tcp_server(port, tcp_socket_fd, tcp_hints, tcp_res);
 
-    // Initialize UDP server
     int udp_socket_fd;
     struct addrinfo udp_hints, *udp_res;
     init_udp_server(port, udp_socket_fd, udp_hints, udp_res);
@@ -59,38 +46,31 @@ int main(int argc, char *argv[]) {
     socklen_t addr_len = sizeof(client_addr);
 
     while (true) {
-        // Clear and set file descriptors
         FD_ZERO(&read_fds);
         FD_SET(tcp_socket_fd, &read_fds);
         FD_SET(udp_socket_fd, &read_fds);
         max_fd = (tcp_socket_fd > udp_socket_fd) ? tcp_socket_fd : udp_socket_fd;
 
-        // Wait for activity on any socket
         int activity = select(max_fd + 1, &read_fds, nullptr, nullptr, nullptr);
         if (activity < 0) {
             std::cerr << "select error" << std::endl;
             continue;
         }
 
-        // Check for new TCP connection
         if (FD_ISSET(tcp_socket_fd, &read_fds)) {
             int new_client_fd = accept(tcp_socket_fd, (struct sockaddr *)&client_addr, &addr_len);
             if (new_client_fd == -1) {
                 std::cerr << "[TCP] Failed to accept connection" << std::endl;
                 continue;
             }
-
-            // Handle client immediately: read, respond, and close
             handle_tcp_client(new_client_fd, verbose, client_addr);
         }
 
-        // Check for UDP message
         if (FD_ISSET(udp_socket_fd, &read_fds)) {
             handle_udp_message(udp_socket_fd, verbose);
         }
     }
 
-    // Cleanup (unreachable in normal operation)
     freeaddrinfo(tcp_res);
     freeaddrinfo(udp_res);
     close(tcp_socket_fd);

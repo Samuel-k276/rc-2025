@@ -5,23 +5,10 @@
 #include <netdb.h>
 #include <string>
 
-/**
- * Open a TCP connection to the server and send a command.
- * Creates a new socket for each command (socket is closed after use).
- * @param buffer: command message
- * @param res: address info result
- * @param response: response from server
- * @return bool: true if the command is sent successfully, false otherwise
- */
+// Send command over TCP (opens new connection each time)
 bool send_tcp_command(std::string &buffer, struct addrinfo *res, std::string &response);
 
-/**
- * Uses the open UDP socket to send a command.
- * @param socket_fd: socket file descriptor
- * @param message: command message
- * @param res: address info result
- * @return bool: true if the command is sent successfully, false otherwise
- */
+// Send command over UDP using existing socket
 bool send_udp_command(int socket_fd, std::string &message, struct addrinfo *res, std::string &response);
 
 #endif
