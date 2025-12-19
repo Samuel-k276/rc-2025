@@ -9,6 +9,7 @@
 
 #include "tcp_server.h"
 #include "udp_server.h"
+#include "storage.h"
 
 /**
  * Server port
@@ -41,6 +42,12 @@ int main(int argc, char *argv[]) {
 
     std::cout << "Server is running on port " << port << std::endl;
     std::cout << "Verbose mode: " << (verbose ? "on" : "off") << std::endl;
+
+    // Initialize storage directories
+    init_storage();
+    
+    // Load data from disk
+    load_data_from_disk();
 
     // Initialize TCP server
     int tcp_socket_fd;

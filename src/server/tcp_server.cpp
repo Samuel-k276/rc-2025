@@ -1,6 +1,7 @@
 #include "tcp_server.h"
 #include "user.h"
 #include "events.h"
+#include "storage.h"
 #include "../common/input.h"
 #include "../common/commands.h"
 #include "../common/constants.h"
@@ -13,6 +14,7 @@
 #include <sstream>
 #include <string>
 #include <unistd.h>
+#include <algorithm>
 
 
 
@@ -37,6 +39,17 @@ void create(std::string uid,std::string password, std::string name,std::string e
     }
 
     std::string message = add_event(uid,name,fname, event_date, stoi(attendance_size));
+    
+    // Extract EID from response message (format: "RCE OK 001")
+    std::istringstream iss(message);
+    std::string status, ok, eid_str;
+    iss >> status >> ok >> eid_str;
+    int eid = std::stoi(eid_str);
+    
+    // Save event description file
+    // fdata is passed as parameter and may contain binary data
+    save_event_description_file(eid, fname, fdata);
+    
     send(client_fd, message.c_str(), message.length(), 0);
     return;
 }
@@ -232,7 +245,25 @@ void handle_tcp_client(int client_fd) {
                 std::string fsize;
                 std::string fdata;
 
-                ss >> command >> uid >> password >> name >> event_date >> attendance_size >> fname >> fsize >> fdata;
+                ss >> command >> uid >> password >> name >> event_date >> attendance_size >> fname >> fsize;
+                
+                // Read the rest of the message as fdata (may contain spaces or binary data)
+                // Find position after fsize
+                size_t fsize_pos = message.find(fsize);
+                if (fsize_pos != std::string::npos) {
+                    size_t fdata_start = fsize_pos + fsize.length();
+                    // Skip space after fsize
+                    if (fdata_start < message.length() && message[fdata_start] == ' ') {
+                        fdata_start++;
+                    }
+                    // Read until newline (if present)
+                    size_t fdata_end = message.find('\n', fdata_start);
+                    if (fdata_end == std::string::npos) {
+                        fdata_end = message.length();
+                    }
+                    fdata = message.substr(fdata_start, fdata_end - fdata_start);
+                }
+                
                 create(uid, password, name, event_date, attendance_size,
                         fname, fsize, fdata, client_fd);
             }
