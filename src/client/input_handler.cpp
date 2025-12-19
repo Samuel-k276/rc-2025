@@ -144,8 +144,10 @@ bool parse_create_event_input(std::stringstream &args, std::string &message) {
         std::cerr << "Failed to read file: " << event_fname << std::endl;
         return false;
     }
-    message = command_to_string.at(CREATE_EVENT) + " " + uid + " " + password + " " + name + " " + date + " " + time +
-              " " + num_attendees + "\n";
+
+    std::string event_date = date + " " + time;
+    message = command_to_string.at(CREATE_EVENT) + " " + uid + " " + password + " " + name + " " + event_date + " " +
+              num_attendees + " " + Fname + " " + Fsize + " " + Fdata + "\n";
     return true;
 }
 
