@@ -61,7 +61,6 @@ std::string list_events() {
         if (e.owner_uid.empty()) continue;
 
         int state = get_event_status(eid);
-
         message += " " + std::to_string(eid) + " " + e.name + " " + std::to_string(state) + " " + e.date_time;
     }
 
@@ -221,7 +220,12 @@ std::string get_user_reservations(std::string uid) {
         std::string timestamp = std::get<1>(reservations[i]);
         int seats = std::get<2>(reservations[i]);
 
-        message += " " + std::to_string(eid) + " " + timestamp + " " + std::to_string(seats);
+        // Split timestamp into date and time parts (format: "dd-mm-yyyy hh:mm:ss")
+        size_t space_pos = timestamp.find(' ');
+        std::string date_part = (space_pos != std::string::npos) ? timestamp.substr(0, space_pos) : timestamp;
+        std::string time_part = (space_pos != std::string::npos) ? timestamp.substr(space_pos + 1) : "";
+
+        message += " " + std::to_string(eid) + " " + date_part + " " + time_part + " " + std::to_string(seats);
     }
     message += "\n";
     return message;

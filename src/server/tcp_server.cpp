@@ -86,10 +86,21 @@ void close(std::string uid, std::string password, std::string eid, int client_fd
 }
 
 void list(int client_fd) {
-    if (!event_exist(1)) {
+    std::vector<int> eids = get_all_event_ids();
+    bool has_valid_events = false;
+    for (int eid : eids) {
+        Event e = load_event_from_disk(eid);
+        if (!e.owner_uid.empty()) {
+            has_valid_events = true;
+            break;
+        }
+    }
+    
+    if (!has_valid_events) {
         send(client_fd, "RLS NOK\n", 8, 0);
         return;
     }
+    
     std::string message = list_events();
     send(client_fd, message.c_str(), message.length(), 0);
     return;
