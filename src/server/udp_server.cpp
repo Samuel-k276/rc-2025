@@ -12,6 +12,7 @@
 
 #include "../common/commands.h"
 #include "../common/constants.h"
+#include "../common/utils.h"
 #include "events.h"
 #include "input_handler.h"
 #include "user.h"
@@ -58,23 +59,23 @@ void logout(std::string uid, std::string password, int &socket_fd, struct sockad
 void unregister(std::string uid, std::string password, int &socket_fd, struct sockaddr_in &client_addr,
                 socklen_t &addr_len) {
     if (!is_user_registered(uid)) {
-        sendto(socket_fd, "UNR UNR\n", 8, 0, (struct sockaddr *)&client_addr, addr_len);
+        sendto(socket_fd, "RUR UNR\n", 8, 0, (struct sockaddr *)&client_addr, addr_len);
         return;
     }
 
     if (!is_user_logged_in(uid)) {
-        sendto(socket_fd, "UNR NOK\n", 8, 0, (struct sockaddr *)&client_addr, addr_len);
+        sendto(socket_fd, "RUR NOK\n", 8, 0, (struct sockaddr *)&client_addr, addr_len);
         return;
     }
 
     if (get_user(uid).password != password) {
-        sendto(socket_fd, "UNR WRP\n", 8, 0, (struct sockaddr *)&client_addr, addr_len);
+        sendto(socket_fd, "RUR WRP\n", 8, 0, (struct sockaddr *)&client_addr, addr_len);
         return;
     }
 
     logout_user(uid);
     remove_user(uid);
-    sendto(socket_fd, "UNR OK\n", 7, 0, (struct sockaddr *)&client_addr, addr_len);
+    sendto(socket_fd, "RUR OK\n", 7, 0, (struct sockaddr *)&client_addr, addr_len);
     return;
 }
 
@@ -154,7 +155,7 @@ void init_udp_server(char *port, int &socket_fd, struct addrinfo &hints, struct 
     return;
 }
 
-void handle_udp_message(int socket_fd) {
+void handle_udp_message(int socket_fd, bool verbose) {
     struct sockaddr_in client_addr;
     socklen_t addr_len = sizeof(client_addr);
     char buffer[MAX_MESSAGE_LENGTH];
@@ -168,56 +169,65 @@ void handle_udp_message(int socket_fd) {
     buffer[n] = '\0';
     std::string message = std::string(buffer);
 
-    const CommandType command_type = get_command_type(message.substr(0, CMD_LENGTH));
+    const std::string command_code = message.substr(0, CMD_LENGTH);
+    const CommandType command_type = get_command_type(command_code);
+    std::string uid = "";
+    
+    // Extract UID for verbose output (if available in the message)
     switch (command_type) {
         case LOGIN: {
-            std::string uid, password;
-            if (!parse_login_command(message, uid, password)) {
+            std::string password;
+            if (parse_login_command(message, uid, password)) {
+                print_verbose_message(uid, command_code, client_addr, verbose);
+                login(uid, password, socket_fd, client_addr, addr_len);
+            } else {
                 std::cerr << "[UDP] Invalid login command: " << message << std::endl;
                 sendto(socket_fd, "ERR\n", 4, 0, (struct sockaddr *)&client_addr, addr_len);
-                break;
             }
-            login(uid, password, socket_fd, client_addr, addr_len);
             break;
         }
         case LOGOUT: {
-            std::string uid, password;
-            if (!parse_logout_command(message, uid, password)) {
+            std::string password;
+            if (parse_logout_command(message, uid, password)) {
+                print_verbose_message(uid, command_code, client_addr, verbose);
+                logout(uid, password, socket_fd, client_addr, addr_len);
+            } else {
                 std::cerr << "[UDP] Invalid logout command: " << message << std::endl;
                 sendto(socket_fd, "ERR\n", 4, 0, (struct sockaddr *)&client_addr, addr_len);
-                break;
             }
-            logout(uid, password, socket_fd, client_addr, addr_len);
             break;
         }
         case UNREGISTER: {
-            std::string uid, password;
-            if (!parse_unregister_command(message, uid, password)) {
+            std::string password;
+            if (parse_unregister_command(message, uid, password)) {
+                print_verbose_message(uid, command_code, client_addr, verbose);
+                unregister(uid, password, socket_fd, client_addr, addr_len);
+            } else {
                 std::cerr << "[UDP] Invalid unregister command: " << message << std::endl;
                 sendto(socket_fd, "ERR\n", 4, 0, (struct sockaddr *)&client_addr, addr_len);
-                break;
             }
-            unregister(uid, password, socket_fd, client_addr, addr_len);
             break;
         }
         case LIST_MY_EVENTS: {
-            std::string uid, password;
-            if (!parse_list_my_events_command(message, uid, password)) {
+            std::string password;
+            if (parse_list_my_events_command(message, uid, password)) {
+                print_verbose_message(uid, command_code, client_addr, verbose);
+                list_my_events(uid, password, socket_fd, client_addr, addr_len);
+            } else {
                 std::cerr << "[UDP] Invalid list my events command: " << message << std::endl;
                 sendto(socket_fd, "ERR\n", 4, 0, (struct sockaddr *)&client_addr, addr_len);
-                break;
             }
-            list_my_events(uid, password, socket_fd, client_addr, addr_len);
             break;
         }
         case LIST_MY_RESERVATIONS: {
-            std::string uid, password;
-            if (!parse_list_my_reservations_command(message, uid, password)) {
+            std::string password;
+            if (parse_list_my_reservations_command(message, uid, password)) {
+                print_verbose_message(uid, command_code, client_addr, verbose);
+                list_my_reservations(uid, password, socket_fd, client_addr, addr_len);
+            } else {
                 std::cerr << "[UDP] Invalid list my reservations command: " << message << std::endl;
                 sendto(socket_fd, "ERR\n", 4, 0, (struct sockaddr *)&client_addr, addr_len);
-                break;
             }
-            list_my_reservations(uid, password, socket_fd, client_addr, addr_len);
             break;
         }
         case INVALID_COMMAND:
@@ -226,6 +236,4 @@ void handle_udp_message(int socket_fd) {
             sendto(socket_fd, "ERR\n", 4, 0, (struct sockaddr *)&client_addr, addr_len);
             break;
     }
-    message.pop_back();
-    std::cout << "[UDP] Received message: " << message << std::endl;
 }

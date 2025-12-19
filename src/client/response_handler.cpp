@@ -43,12 +43,12 @@ void handle_logout_response(const std::string &response) {
 }
 
 void handle_unregister_response(const std::string &response) {
-    if (response.substr(0, 7) == "UNR OK\n") {
+    if (response.substr(0, 7) == "RUR OK\n") {
         std::cout << "successful unregister" << std::endl;
         clear_user_session();
-    } else if (response.substr(0, 8) == "UNR UNR\n") {
+    } else if (response.substr(0, 8) == "RUR UNR\n") {
         std::cout << "unknown user" << std::endl;
-    } else if (response.substr(0, 8) == "UNR NOK\n" || response.substr(0, 8) == "UNR WRP\n") {
+    } else if (response.substr(0, 8) == "RUR NOK\n" || response.substr(0, 8) == "RUR WRP\n") {
         std::cout << "incorrect unregister attempt" << std::endl;
     } else if (response.substr(0, 4) == "ERR\n") {
         std::cerr << "Invalid command syntax or parameters" << std::endl;
@@ -116,33 +116,14 @@ void handle_myevents_response(const std::string &response) {
 
 void handle_myreservations_response(const std::string &response) {
     if (response.substr(0, 7) == "RMR OK ") {
-        // Parse and display reservations: RMR OK EID1 timestamp1 value1 EID2 timestamp2 value2 ...
-        // timestamp format from ctime(): "Day Mon DD HH:MM:SS YYYY" (e.g., "Mon Nov 18 14:30:00 2024")
+        // Parse and display reservations: RMR OK EID1 date1 time1 value1 EID2 date2 time2 value2 ...
+        // timestamp format: "dd-mm-yyyy hh:mm:ss" (e.g., "19-12-2025 20:04:53")
         std::stringstream ss(response);
-        std::string status, eid, value;
+        std::string status, eid, date_part, time_part, value;
         ss >> status >> status; // RMR OK
-        while (ss >> eid) {
-            // Read timestamp (ctime format has spaces, read until we find a number for value)
-            std::string token;
-            std::string full_timestamp;
-            // Read tokens until we find a pure number (the value/seats)
-            while (ss >> token) {
-                // Check if token is a pure number (the value)
-                bool is_number = true;
-                for (char c : token) {
-                    if (!std::isdigit(c)) {
-                        is_number = false;
-                        break;
-                    }
-                }
-                if (is_number && !full_timestamp.empty()) {
-                    value = token;
-                    break;
-                }
-                if (!full_timestamp.empty()) full_timestamp += " ";
-                full_timestamp += token;
-            }
-            std::cout << "Reservation: Event " << eid << " - " << full_timestamp << " (" << value << " seats)"
+        while (ss >> eid >> date_part >> time_part >> value) {
+            std::string timestamp = date_part + " " + time_part;
+            std::cout << "Reservation: Event " << eid << " - " << timestamp << " (" << value << " seats)"
                       << std::endl;
         }
     } else if (response.substr(0, 8) == "RMR NOK\n") {
@@ -312,21 +293,25 @@ void handle_show_event_details_response(const std::string &response) {
 }
 
 void handle_reserve_response(const std::string &response) {
-    if (response.substr(0, 8) == "PRI ACC\n") {
+    if (response.substr(0, 8) == "RRI ACC\n") {
         std::cout << "accepted" << std::endl;
-    } else if (response.substr(0, 8) == "PRI REJ\n") {
-        std::cout << "refused" << std::endl;
-    } else if (response.substr(0, 8) == "PRI NOK\n") {
-        std::cout << "event does not exist" << std::endl;
-    } else if (response.substr(0, 8) == "PRI NLG\n") {
+    } else if (response.substr(0, 7) == "RRI REJ ") {
+        // Parse RRI REJ n_seats\n
+        std::stringstream ss(response);
+        std::string status, rej, n_seats;
+        ss >> status >> rej >> n_seats;
+        std::cout << "refused " << n_seats << std::endl;
+    } else if (response.substr(0, 8) == "RRI NOK\n") {
+        std::cout << "event is no longer active" << std::endl;
+    } else if (response.substr(0, 8) == "RRI NLG\n") {
         std::cerr << "User is not logged in" << std::endl;
-    } else if (response.substr(0, 8) == "PRI CLO\n") {
-        std::cout << "event is closed" << std::endl;
-    } else if (response.substr(0, 8) == "PRI SLD\n") {
-        std::cout << "event is sold out" << std::endl;
-    } else if (response.substr(0, 8) == "PRI PST\n") {
-        std::cout << "event is in the past" << std::endl;
-    } else if (response.substr(0, 8) == "PRI WRP\n") {
+    } else if (response.substr(0, 8) == "RRI CLO\n") {
+        std::cout << "event is no longer active" << std::endl;
+    } else if (response.substr(0, 8) == "RRI SLD\n") {
+        std::cout << "event is no longer active" << std::endl;
+    } else if (response.substr(0, 8) == "RRI PST\n") {
+        std::cout << "event is no longer active" << std::endl;
+    } else if (response.substr(0, 8) == "RRI WRP\n") {
         std::cerr << "Password is incorrect" << std::endl;
     } else if (response.substr(0, 4) == "ERR\n") {
         std::cerr << "Invalid command syntax or parameters" << std::endl;

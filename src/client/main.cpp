@@ -54,8 +54,6 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    std::cout << "Connecting to server at " << ESIP << ":" << ESport << std::endl;
-
     int UDP_socket_fd = socket(AF_INET, SOCK_DGRAM, 0);
     if (UDP_socket_fd == -1) {
         std::cerr << "Failed to create UDP socket" << std::endl;
@@ -75,7 +73,6 @@ int main(int argc, char *argv[]) {
 
     while (true) {
         if (fgets(buffer, sizeof(buffer), stdin) == NULL) {
-            std::cout << "Input ended. Exiting." << std::endl;
             break;
         }
         std::string command;

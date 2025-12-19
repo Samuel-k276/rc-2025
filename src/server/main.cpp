@@ -40,30 +40,23 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    std::cout << "Server is running on port " << port << std::endl;
-    std::cout << "Verbose mode: " << (verbose ? "on" : "off") << std::endl;
-
     // Initialize storage directories
     init_storage();
 
     // Initialize TCP server
     int tcp_socket_fd;
     struct addrinfo tcp_hints, *tcp_res;
-    std::cout << "[TCP] Initializing TCP server on port " << port << std::endl;
     init_tcp_server(port, tcp_socket_fd, tcp_hints, tcp_res);
 
     // Initialize UDP server
     int udp_socket_fd;
     struct addrinfo udp_hints, *udp_res;
-    std::cout << "[UDP] Initializing UDP server on port " << port << std::endl;
     init_udp_server(port, udp_socket_fd, udp_hints, udp_res);
 
     fd_set read_fds;
     int max_fd;
     struct sockaddr_in client_addr;
     socklen_t addr_len = sizeof(client_addr);
-
-    std::cout << "Server ready. Waiting for connections..." << std::endl;
 
     while (true) {
         // Clear and set file descriptors
@@ -87,14 +80,13 @@ int main(int argc, char *argv[]) {
                 continue;
             }
 
-            std::cout << "[TCP] New client connected (fd: " << new_client_fd << ")" << std::endl;
             // Handle client immediately: read, respond, and close
-            handle_tcp_client(new_client_fd);
+            handle_tcp_client(new_client_fd, verbose, client_addr);
         }
 
         // Check for UDP message
         if (FD_ISSET(udp_socket_fd, &read_fds)) {
-            handle_udp_message(udp_socket_fd);
+            handle_udp_message(udp_socket_fd, verbose);
         }
     }
 

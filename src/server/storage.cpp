@@ -32,8 +32,6 @@ static void create_directory_recursive(const std::string &path) {
 void init_storage() {
     create_directory_recursive("src/server/storage/USERS");
     create_directory_recursive("src/server/storage/EVENTS");
-
-    std::cout << "Storage directories initialized at src/server/storage/" << std::endl;
 }
 
 std::string get_current_datetime() {

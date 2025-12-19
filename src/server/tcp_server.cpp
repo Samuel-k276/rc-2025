@@ -2,6 +2,7 @@
 #include "../common/commands.h"
 #include "../common/constants.h"
 #include "../common/input.h"
+#include "../common/utils.h"
 #include "events.h"
 #include "input_handler.h"
 #include "storage.h"
@@ -123,37 +124,42 @@ void show_event_details(int eid, int client_fd) {
 
 void reserve(std::string uid, std::string password, std::string eid, std::string number_of_people, int client_fd) {
     if (!event_exist(stoi(eid))) {
-        send(client_fd, "PRI NOK\n", 8, 0);
+        send(client_fd, "RRI NOK\n", 8, 0);
         return;
     }
     if (!is_user_logged_in(uid)) {
-        send(client_fd, "PRI NLG\n", 8, 0);
+        send(client_fd, "RRI NLG\n", 8, 0);
         return;
     }
     if (get_user(uid).password != password) {
-        send(client_fd, "PRI WRP\n", 8, 0);
+        send(client_fd, "RRI WRP\n", 8, 0);
         return;
     }
     int state = get_event_status(stoi(eid));
     if (state == 2) {
-        send(client_fd, "PRI SLD\n", 8, 0);
+        send(client_fd, "RRI SLD\n", 8, 0);
         return;
     }
     if (state == 0) {
-        send(client_fd, "PRI PST\n", 8, 0);
+        send(client_fd, "RRI PST\n", 8, 0);
         return;
     }
     if (state == 3) {
-        send(client_fd, "PRI CLO\n", 8, 0);
+        send(client_fd, "RRI CLO\n", 8, 0);
         return;
     }
     if (!enough_seats(stoi(eid), stoi(number_of_people))) {
-        send(client_fd, "PRI REJ\n", 8, 0);
+        // Calculate remaining seats
+        Event e = load_event_from_disk(stoi(eid));
+        int reserved_seats = load_event_reserved_seats(stoi(eid));
+        int remaining_seats = e.total_seats - reserved_seats;
+        std::string message = "RRI REJ " + std::to_string(remaining_seats) + "\n";
+        send(client_fd, message.c_str(), message.length(), 0);
         return;
     }
 
     add_reservation(uid, stoi(eid), stoi(number_of_people));
-    send(client_fd, "PRI ACC\n", 8, 0);
+    send(client_fd, "RRI ACC\n", 8, 0);
     return;
 }
 
@@ -216,7 +222,7 @@ void init_tcp_server(char *port, int &socket_fd, struct addrinfo &hints, struct 
     return;
 }
 
-void handle_tcp_client(int client_fd) {
+void handle_tcp_client(int client_fd, bool verbose, struct sockaddr_in &client_addr) {
     char buffer[MAX_MESSAGE_LENGTH];
     int bytes_read;
 
@@ -229,7 +235,6 @@ void handle_tcp_client(int client_fd) {
 
     if (bytes_read == 0) {
         // Client closed connection before sending data
-        std::cout << "[TCP] Client closed connection (fd: " << client_fd << ")" << std::endl;
         close(client_fd);
         return;
     }
@@ -240,66 +245,74 @@ void handle_tcp_client(int client_fd) {
     while (!message.empty() && (message.back() == '\n' || message.back() == '\r' || message.back() == ' ')) {
         message.pop_back();
     }
-    std::cout << "[TCP] Received message: " << message << std::endl;
 
-    const CommandType command_type = get_command_type(message.substr(0, CMD_LENGTH));
+    const std::string command_code = message.substr(0, CMD_LENGTH);
+    const CommandType command_type = get_command_type(command_code);
+    std::string uid = "";
+    
     switch (command_type) {
         case CREATE_EVENT: {
-            std::string uid, password, name, event_date, attendance_size, fname, fsize, fdata;
-            if (!parse_create_command(message, uid, password, name, event_date, attendance_size, fname, fsize, fdata)) {
+            std::string password, name, event_date, attendance_size, fname, fsize, fdata;
+            if (parse_create_command(message, uid, password, name, event_date, attendance_size, fname, fsize, fdata)) {
+                print_verbose_message(uid, command_code, client_addr, verbose);
+                create(uid, password, name, event_date, attendance_size, fname, fsize, fdata, client_fd);
+            } else {
                 std::cerr << "[TCP] Invalid create command: " << message << std::endl;
                 send(client_fd, "ERR\n", 4, 0);
-                break;
             }
-            create(uid, password, name, event_date, attendance_size, fname, fsize, fdata, client_fd);
             break;
         }
         case CLOSE_EVENT: {
-            std::string uid, password, eid;
-            if (!parse_close_command(message, uid, password, eid)) {
+            std::string password, eid;
+            if (parse_close_command(message, uid, password, eid)) {
+                print_verbose_message(uid, command_code, client_addr, verbose);
+                close(uid, password, eid, client_fd);
+            } else {
                 std::cerr << "[TCP] Invalid close command: " << message << std::endl;
                 send(client_fd, "ERR\n", 4, 0);
-                break;
             }
-            close(uid, password, eid, client_fd);
             break;
         }
         case LIST_EVENTS:
-            if (!parse_list_command(message)) {
+            if (parse_list_command(message)) {
+                print_verbose_message("-", command_code, client_addr, verbose);
+                list(client_fd);
+            } else {
                 std::cerr << "[TCP] Invalid list command: " << message << std::endl;
                 send(client_fd, "ERR\n", 4, 0);
-                break;
             }
-            list(client_fd);
             break;
         case SHOW_EVENT_DETAILS: {
             std::string eid;
-            if (!parse_show_event_details_command(message, eid)) {
+            if (parse_show_event_details_command(message, eid)) {
+                print_verbose_message("-", command_code, client_addr, verbose);
+                show_event_details(stoi(eid), client_fd);
+            } else {
                 std::cerr << "[TCP] Invalid show event details command: " << message << std::endl;
                 send(client_fd, "ERR\n", 4, 0);
-                break;
             }
-            show_event_details(stoi(eid), client_fd);
             break;
         }
         case RESERVE: {
-            std::string uid, password, eid, number_of_people;
-            if (!parse_reserve_command(message, uid, password, eid, number_of_people)) {
+            std::string password, eid, number_of_people;
+            if (parse_reserve_command(message, uid, password, eid, number_of_people)) {
+                print_verbose_message(uid, command_code, client_addr, verbose);
+                reserve(uid, password, eid, number_of_people, client_fd);
+            } else {
                 std::cerr << "[TCP] Invalid reserve command: " << message << std::endl;
                 send(client_fd, "ERR\n", 4, 0);
-                break;
             }
-            reserve(uid, password, eid, number_of_people, client_fd);
             break;
         }
         case CHANGE_PASS: {
-            std::string uid, old_password, new_password;
-            if (!parse_change_pass_command(message, uid, old_password, new_password)) {
+            std::string old_password, new_password;
+            if (parse_change_pass_command(message, uid, old_password, new_password)) {
+                print_verbose_message(uid, command_code, client_addr, verbose);
+                change_pass(uid, old_password, new_password, client_fd);
+            } else {
                 std::cerr << "[TCP] Invalid change pass command: " << message << std::endl;
                 send(client_fd, "ERR\n", 4, 0);
-                break;
             }
-            change_pass(uid, old_password, new_password, client_fd);
             break;
         }
         default:
@@ -310,5 +323,4 @@ void handle_tcp_client(int client_fd) {
 
     shutdown(client_fd, SHUT_WR);
     close(client_fd);
-    std::cout << "[TCP] Connection closed (fd: " << client_fd << ")" << std::endl;
 }

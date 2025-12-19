@@ -49,8 +49,6 @@ bool send_udp_command(int socket_fd, std::string &message, struct addrinfo *res,
         std::cerr << "Failed to send UDP command to server" << std::endl;
         return false;
     }
-    message.pop_back();
-    std::cout << "Sent UDP command to server: " << message << std::endl;
 
     socklen_t addrlen = sizeof(addr);
     char response_buffer[4096];
@@ -61,6 +59,5 @@ bool send_udp_command(int socket_fd, std::string &message, struct addrinfo *res,
     }
     response_buffer[n] = '\0';
     response = std::string(response_buffer);
-    std::cout << "Received UDP command from server: " << response;
     return true;
 }

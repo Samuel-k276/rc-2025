@@ -6,6 +6,6 @@
 #include <sys/types.h>
 
 void init_tcp_server(char *port, int &socket_fd, struct addrinfo &hints, struct addrinfo *&res);
-void handle_tcp_client(int client_fd); // Handles request and closes connection
+void handle_tcp_client(int client_fd, bool verbose, struct sockaddr_in &client_addr); // Handles request and closes connection
 
 #endif

@@ -8,7 +8,7 @@
 #include <sys/types.h>
 
 void init_udp_server(char *port, int &socket_fd, struct addrinfo &hints, struct addrinfo *&res);
-void handle_udp_message(int socket_fd);
+void handle_udp_message(int socket_fd, bool verbose);
 
 void login(std::string uid, std::string password, int &socket_fd, struct sockaddr_in &client_addr, socklen_t &addr_len);
 void logout(std::string uid, std::string password, int &socket_fd, struct sockaddr_in &client_addr,

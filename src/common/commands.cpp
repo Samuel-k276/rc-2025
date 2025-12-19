@@ -1,4 +1,5 @@
 #include "commands.h"
+#include <unordered_map>
 
 CommandType get_command_type(std::string command) {
     if (CommandUDPMap.find(command) != CommandUDPMap.end()) {
