@@ -80,8 +80,11 @@ void add_reservation(std::string uid, int eid, int seats) {
 
     auto now = std::chrono::system_clock::now();
     std::time_t t = std::chrono::system_clock::to_time_t(now);
-    std::string ts = std::ctime(&t);
-    ts.pop_back();
+    std::tm tm = *std::localtime(&t);
+
+    char buf[20];
+    std::strftime(buf, sizeof(buf), "%d-%m-%Y %H:%M:%S", &tm);
+    std::string ts(buf);
 
     reservations_by_uid[uid].push_back({eid, ts, seats});
     return;
@@ -97,7 +100,10 @@ bool uid_has_reservations(std::string uid) {
 std::string get_user_reservations(std::string uid) {
     std::string message = "RMR OK";
     std::vector<Reservation> reservations = reservations_by_uid[uid];
-    for(Reservation res : reservations) {
+    int start = std::max(0, (int)reservations.size() - 50);
+    for(size_t i = start; i < reservations.size(); ++i) {
+        Reservation& res = reservations[i];
+
         message += " " + std::to_string(res.eid) + " " + res.timestamp + " " + std::to_string(res.seats);
     }
     message += "\n";
