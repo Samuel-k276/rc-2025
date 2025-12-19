@@ -65,3 +65,4 @@ src/server/storage/*
 
 # Test scripts
 SCRIPTS_25-26/*
+reports/*
