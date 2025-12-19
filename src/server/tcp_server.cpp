@@ -41,6 +41,42 @@ void create(std::string uid,std::string password, std::string name,std::string e
     return;
 }
 
+void close(std::string uid, std::string password, std::string eid, int client_fd) {
+    if (!is_user_logged_in(uid)) {
+        send(client_fd, "RCL NLG\n", 8, 0);
+        return;
+    }
+    if (get_user(uid).password != password || !is_user_registered(uid)) {
+        send(client_fd, "RCL NOK\n", 8, 0);
+        return;
+    }
+    if (!event_exist(stoi(eid))) {
+        send(client_fd, "RCL NOE\n", 8, 0);
+        return;
+    }
+    if (!owner_of_event(uid, stoi(eid))) {
+        send(client_fd, "RCL EOW\n", 8, 0);
+        return;
+    }
+    int state = get_event_status(stoi(eid));
+    if (state == 2) {
+        send(client_fd, "RCL SLD\n", 8, 0);
+        return;
+    }
+    if (state == 0) {
+        send(client_fd, "RCL PST\n", 8, 0);
+        return;
+    }
+    if (state == 3) {
+        send(client_fd, "RCL CLO\n", 8, 0);
+        return;
+    }
+
+    close_event(stoi(eid));
+    send(client_fd, "RCL OK\n", 7, 0);
+    return;
+}
+
 void change_pass(std::string uid, std::string old_password, std::string new_password, int client_fd) {
     if (!is_user_logged_in(uid)) {
         send(client_fd, "RCP NLG\n", 8, 0);
@@ -156,6 +192,19 @@ void handle_tcp_client(int client_fd) {
             }
             break;
         case CLOSE_EVENT:
+            if (!is_valid_close_command(message)) {
+                std::cerr << "[TCP] Invalid close command: " << message << std::endl;
+                send(client_fd, "ERR\n", 4, 0);
+                break;
+            }
+            {
+                std::stringstream ss(message);
+                std::string command;
+                std::string uid;
+                std::string password;
+                std::string eid;
+                close(uid, password, eid, client_fd);
+            }
             break;
         case LIST_EVENTS:
             break;

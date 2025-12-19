@@ -70,6 +70,22 @@ Event* get_event(int eid) {
     return &events[eid];
 }
 
+int get_event_status(int eid) {
+    Event* e = get_event(eid);
+    return e->state;
+}
+
+bool owner_of_event(std::string uid, int eid) {
+    Event* e = get_event(eid);
+    return e-> owner_uid == uid;
+}
+
+void close_event(int eid) {
+    Event* e = get_event(eid);
+    e-> state = 3;
+    return;
+}
+
 bool enough_seats(Event event, int seats) {
     return event.reserved_seats + seats > event.total_seats;
 }

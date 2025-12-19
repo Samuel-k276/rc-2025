@@ -162,6 +162,34 @@ bool is_valid_create_command(std::string message) {
     return true;
 }
 
+bool is_valid_close_command(std::string message) {
+    if (message.empty()) {
+        return false;
+    }
+
+    std::stringstream ss(message);
+    std::string command;
+    std::string uid;
+    std::string password;
+    std::string eid;
+
+    if (!is_uid_valid(uid)) {
+        std::cerr << "Invalid UID: " << uid << std::endl;
+        return false;
+    }
+    if (!is_password_valid(password)) {
+        std::cerr << "Invalid password: " << password << std::endl;
+        return false;
+    }
+    if (!is_eid_valid(eid)) {
+        std::cerr << "Invalid event ID: " << eid << std::endl;
+        return false;
+    }
+
+    return true;
+}
+
+
 bool is_valid_change_pass_command(std::string message) {
     if (message.empty()) {
         return false;
