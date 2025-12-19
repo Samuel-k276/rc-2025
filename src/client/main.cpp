@@ -13,6 +13,7 @@
 
 #include "../common/constants.h"
 #include "command.h"
+#include "response_handler.h"
 #include "send.h"
 #include "session.h"
 
@@ -55,10 +56,9 @@ int main(int argc, char *argv[]) {
 
     std::cout << "Connecting to server at " << ESIP << ":" << ESport << std::endl;
 
-    int TCP_socket_fd = socket(AF_INET, SOCK_STREAM, 0);
     int UDP_socket_fd = socket(AF_INET, SOCK_DGRAM, 0);
-    if (UDP_socket_fd == -1 || TCP_socket_fd == -1 ) {
-        std::cerr << "Failed to create socket" << std::endl;
+    if (UDP_socket_fd == -1) {
+        std::cerr << "Failed to create UDP socket" << std::endl;
         exit(EXIT_FAILURE);
     }
 
@@ -102,19 +102,7 @@ int main(int argc, char *argv[]) {
                     std::cerr << "Failed to send login command to server" << std::endl;
                     break;
                 }
-                if (response == "RLI OK\n") {
-                    std::cout << "successful login" << std::endl;
-                    promote_temp_user_to_user();    
-                } else if (response == "RLI REG\n") {
-                    std::cout << "new user registered" << std::endl;
-                    promote_temp_user_to_user();
-                } else if (response == "RLI NOK\n") {
-                    std::cout << "incorrect login attempt" << std::endl;
-                    clear_temp_user_session();
-                } else {
-                    std::cerr << "Unexpected login response: " << response << std::endl;
-                    clear_temp_user_session();
-                }
+                handle_login_response(response);
                 break;
             }
             case LOGOUT: {
@@ -127,16 +115,7 @@ int main(int argc, char *argv[]) {
                     std::cerr << "Failed to send logout command to server" << std::endl;
                     break;
                 }
-                if (response == "RLO OK\n") {
-                    std::cout << "successful logout" << std::endl;
-                    clear_user_session();
-                } else if (response == "RLO UNR\n") {
-                    std::cout << "unknown user" << std::endl;
-                } else if (response == "RLO NOK\n") {
-                    std::cout << "user not logged in" << std::endl;
-                } else {
-                    std::cerr << "Unexpected logout response: " << response << std::endl;
-                }
+                handle_logout_response(response);
                 break;
             }
             case UNREGISTER: {
@@ -148,16 +127,7 @@ int main(int argc, char *argv[]) {
                     std::cerr << "Failed to send unregister command to server" << std::endl;
                     break;
                 }
-                if (response == "UNR OK\n") {
-                    std::cout << "successful unregister" << std::endl;
-                    clear_user_session();
-                } else if (response == "UNR UNR\n") {
-                    std::cout << "unknown user" << std::endl;
-                } else if (response == "UNR NOK\n" || response == "UNR WRP\n") {
-                    std::cout << "incorrect unregister attempt" << std::endl;
-                } else {
-                    std::cerr << "Unexpected unregister response: " << response << std::endl;
-                }
+                handle_unregister_response(response);
                 break;
             }
             case MYEVENTS: {
@@ -169,16 +139,23 @@ int main(int argc, char *argv[]) {
                     std::cerr << "Failed to send myevents command to server" << std::endl;
                     break;
                 }
-                if (response == "LME OK\n") {
-                    std::cout << "My events successful" << std::endl;
-                    break;
-                } else if (response == "LME NOK\n") {
-                    std::cerr << "Failed to get my events" << std::endl;
-                    break;
-                } else if (response == "LME ERR\n") {
-                    std::cerr << "Error getting my events" << std::endl;
+                handle_myevents_response(response);
+                break;
+            }
+            case MYRESERVATIONS: {
+                std::string extra;
+                if (args >> extra) {
+                    std::cerr << "Invalid myreservations arguments" << std::endl;
                     break;
                 }
+                std::string uid = get_user_id();
+                std::string password = get_user_password();
+                message = command_to_string.at(MYRESERVATIONS) + " " + uid + " " + password + "\n";
+                if (!send_udp_command(UDP_socket_fd, message, res, response)) {
+                    std::cerr << "Failed to send myreservations command to server" << std::endl;
+                    break;
+                }
+                handle_myreservations_response(response);
                 break;
             }
             case EXIT:
@@ -198,20 +175,11 @@ int main(int argc, char *argv[]) {
                     std::cerr << "Invalid create event arguments" << std::endl;
                     break;
                 }
-                if (!send_tcp_command(TCP_socket_fd, message, res, response)) {
+                if (!send_tcp_command(message, res, response)) {
                     std::cerr << "Failed to send create event command to server" << std::endl;
                     break;
                 }
-                if (response == "CRE OK\n") {
-                    std::cout << "Event created successfully" << std::endl;
-                    break;
-                } else if (response == "CRE NOK\n") {
-                    std::cerr << "Failed to create event" << std::endl;
-                    break;
-                } else if (response == "CRE ERR\n") {
-                    std::cerr << "Error creating event" << std::endl;
-                    break;
-                }
+                handle_create_event_response(response);
                 break;
             }
             case CLOSE_EVENT:
@@ -219,70 +187,55 @@ int main(int argc, char *argv[]) {
                     std::cerr << "Invalid close event arguments" << std::endl;
                     break;
                 }
-                if (!send_tcp_command(TCP_socket_fd, message, res, response)) {
+                if (!send_tcp_command(message, res, response)) {
                     std::cerr << "Failed to send close event command to server" << std::endl;
                     break;
                 }
-                if (response == "CLS OK\n") {
-                    std::cout << "Event closed successfully" << std::endl;
-                    break;
-                } else if (response == "CLS NOK\n") {
-                    std::cerr << "Failed to close event" << std::endl;
-                    break;
-                } else if (response == "CLS ERR\n") {
-                    std::cerr << "Error closing event" << std::endl;
-                    break;
-                }
+                handle_close_event_response(response);
                 break;
             case LIST_EVENTS:
                 if (!parse_list_events_input(args, message)) {
                     std::cerr << "Invalid list events arguments" << std::endl;
                     break;
                 }
-                if (!send_tcp_command(TCP_socket_fd, message, res, response)) {
+                if (!send_tcp_command(message, res, response)) {
                     std::cerr << "Failed to send list events command to server" << std::endl;
                     break;
                 }
+                handle_list_events_response(response);
                 break;
             case SHOW_EVENT_DETAILS:
                 if (!parse_show_event_details_input(args, message)) {
                     std::cerr << "Invalid show event details arguments" << std::endl;
                     break;
                 }
-                if (!send_tcp_command(TCP_socket_fd, message, res, response)) {
+                if (!send_tcp_command(message, res, response)) {
                     std::cerr << "Failed to send show event details command to server" << std::endl;
                     break;
                 }
+                handle_show_event_details_response(response);
                 break;
             case RESERVE:
                 if (!parse_reserve_input(args, message)) {
                     std::cerr << "Invalid reserve arguments" << std::endl;
                     break;
                 }
-                if (!send_tcp_command(TCP_socket_fd, message, res, response)) {
+                if (!send_tcp_command(message, res, response)) {
                     std::cerr << "Failed to send reserve command to server" << std::endl;
                     break;
                 }
+                handle_reserve_response(response);
                 break;
             case CHANGE_PASS:
                 if (!parse_change_pass_input(args, message)) {
                     std::cerr << "Invalid change pass arguments" << std::endl;
                     break;
                 }
-                if (!send_tcp_command(TCP_socket_fd, message, res, response)) {
+                if (!send_tcp_command(message, res, response)) {
                     std::cerr << "Failed to send change pass command to server" << std::endl;
                     break;
                 }
-                if (response == "CPS OK\n") {
-                    std::cout << "Password changed successfully" << std::endl;
-                    break;
-                } else if (response == "CPS NOK\n") {
-                    std::cerr << "Failed to change password" << std::endl;
-                    break;
-                } else if (response == "CPS ERR\n") {
-                    std::cerr << "Error changing password" << std::endl;
-                    break;
-                }
+                handle_change_pass_response(response);
                 break;
             default:
                 std::cerr << "Unknown command: " << command << std::endl;

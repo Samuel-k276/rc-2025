@@ -41,6 +41,27 @@ void create(std::string uid,std::string password, std::string name,std::string e
     return;
 }
 
+void change_pass(std::string uid, std::string old_password, std::string new_password, int client_fd) {
+    if (!is_user_logged_in(uid)) {
+        send(client_fd, "RCP NLG\n", 8, 0);
+        return;
+    }
+
+    if (!is_user_registered(uid)) {
+        send(client_fd, "RCP NID\n", 8, 0);
+        return;
+    }
+
+    if (get_user(uid).password != old_password) {
+        send(client_fd, "RCP NOK\n", 8, 0);
+        return;
+    }
+
+    change_user_password(uid, new_password);
+    send(client_fd, "RCP OK\n", 7, 0);
+    return;
+}
+
 void init_tcp_server(char *port, int &socket_fd, struct addrinfo &hints, struct addrinfo *&res) {
     socket_fd = socket(AF_INET, SOCK_STREAM, 0); // TCP socket
     if (socket_fd == -1) {
@@ -143,13 +164,29 @@ void handle_tcp_client(int client_fd) {
         case RESERVE:
             break;
         case CHANGE_PASS:
+            if (!is_valid_change_pass_command(message)) {
+                std::cerr << "[TCP] Invalid change pass command: " << message << std::endl;
+                send(client_fd, "ERR\n", 4, 0);
+                break;
+            }
+            {
+                std::stringstream ss(message);
+                std::string command;
+                std::string uid;
+                std::string old_password;
+                std::string new_password;
+                
+                ss >> command >> uid >> old_password >> new_password;
+                change_pass(uid, old_password, new_password, client_fd);
+            }
+            break;
         default:
             std::cerr << "[TCP] Invalid command: " << message << std::endl;
             send(client_fd, "ERR\n", 4, 0);
             break;
     }
     message.pop_back();
-    std::cout << "[UDP] Received message: " << message << std::endl;
+    std::cout << "[TCP] Received message: " << message << std::endl;
     
     // Close connection after sending response
     close(client_fd);

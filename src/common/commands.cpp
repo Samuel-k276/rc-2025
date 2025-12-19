@@ -161,3 +161,34 @@ bool is_valid_create_command(std::string message) {
 
     return true;
 }
+
+bool is_valid_change_pass_command(std::string message) {
+    if (message.empty()) {
+        return false;
+    }
+
+    std::stringstream ss(message);
+    std::string command;
+    std::string uid;
+    std::string old_password;
+    std::string new_password;
+    
+    if (!(ss >> command >> uid >> old_password >> new_password)) {
+        return false;
+    }
+
+    if (!is_uid_valid(uid)) {
+        std::cerr << "Invalid UID: " << uid << std::endl;
+        return false;
+    }
+    if (!is_password_valid(old_password)) {
+        std::cerr << "Invalid old password" << std::endl;
+        return false;
+    }
+    if (!is_password_valid(new_password)) {
+        std::cerr << "Invalid new password" << std::endl;
+        return false;
+    }
+
+    return true;
+}

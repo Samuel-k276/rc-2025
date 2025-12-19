@@ -51,3 +51,12 @@ void login_user(std::string uid) { get_user(uid).is_logged_in = true; }
  * @param uid: user ID
  */
 void logout_user(std::string uid) { get_user(uid).is_logged_in = false; }
+
+/**
+ * Change a user's password
+ * @param uid: user ID
+ * @param new_password: new password
+ */
+void change_user_password(std::string uid, std::string new_password) {
+    get_user(uid).password = new_password;
+}

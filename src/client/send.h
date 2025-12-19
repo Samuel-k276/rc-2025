@@ -7,13 +7,13 @@
 
 /**
  * Open a TCP connection to the server and send a command.
- * @param socket_fd: socket file descriptor
+ * Creates a new socket for each command (socket is closed after use).
  * @param buffer: command message
  * @param res: address info result
  * @param response: response from server
  * @return bool: true if the command is sent successfully, false otherwise
  */
-bool send_tcp_command(int socket_fd, std::string &buffer, struct addrinfo *res, std::string &response);
+bool send_tcp_command(std::string &buffer, struct addrinfo *res, std::string &response);
 
 /**
  * Uses the open UDP socket to send a command.

@@ -8,29 +8,36 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
-bool send_tcp_command(int socket_fd, std::string &buffer, struct addrinfo *res, std::string &response) {
-    ssize_t n = connect(socket_fd, res->ai_addr, res->ai_addrlen);
-    if (n == -1) {
-        std::cerr << "Failed to connect TCP command to server" << std::endl;
-        close(socket_fd);
+bool send_tcp_command(std::string &buffer, struct addrinfo *res, std::string &response) {
+    // Create a new TCP socket for each command (since we close it after use)
+    int tcp_fd = socket(AF_INET, SOCK_STREAM, 0);
+    if (tcp_fd == -1) {
+        std::cerr << "Failed to create TCP socket" << std::endl;
         return false;
     }
-    n = write(socket_fd, buffer.c_str(), buffer.length());
+    
+    ssize_t n = connect(tcp_fd, res->ai_addr, res->ai_addrlen);
+    if (n == -1) {
+        std::cerr << "Failed to connect TCP command to server" << std::endl;
+        close(tcp_fd);
+        return false;
+    }
+    n = write(tcp_fd, buffer.c_str(), buffer.length());
     if (n == -1) {
         std::cerr << "Failed to send TCP command to server" << std::endl;
-        close(socket_fd);
+        close(tcp_fd);
         return false;
     }
     char response_buffer[4096];
-    n = read(socket_fd, response_buffer, sizeof(response_buffer) - 1);
+    n = read(tcp_fd, response_buffer, sizeof(response_buffer) - 1);
     if (n == -1) {
         std::cerr << "Failed to receive TCP command from server" << std::endl;
-        close(socket_fd);
+        close(tcp_fd);
         return false;
     }
     response_buffer[n] = '\0';
     response = std::string(response_buffer);
-    close(socket_fd);
+    close(tcp_fd);
     return true;
 }
 

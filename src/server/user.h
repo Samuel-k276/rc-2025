@@ -17,5 +17,6 @@ bool is_user_registered(std::string uid);
 bool is_user_logged_in(std::string uid);
 void login_user(std::string uid);
 void logout_user(std::string uid);
+void change_user_password(std::string uid, std::string new_password);
 
 #endif

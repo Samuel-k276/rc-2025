@@ -223,6 +223,8 @@ bool parse_change_pass_input(std::stringstream &args, std::string &message) {
         return false;
     }
     std::string uid = get_user_id();
+    set_temp_user_id(uid);
+    set_temp_user_password(new_password);
     message = command_to_string.at(CHANGE_PASS) + " " + uid + " " + old_password + " " + new_password + "\n";
     return true;
 }
