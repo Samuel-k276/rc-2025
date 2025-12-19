@@ -46,9 +46,6 @@ int main(int argc, char *argv[]) {
     // Initialize storage directories
     init_storage();
 
-    // Load data from disk
-    load_data_from_disk();
-
     // Initialize TCP server
     int tcp_socket_fd;
     struct addrinfo tcp_hints, *tcp_res;

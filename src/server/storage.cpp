@@ -469,12 +469,3 @@ std::vector<std::tuple<int, std::string, int>> get_user_reservations_from_disk(c
     }
     return reservations;
 }
-
-// Load all data from disk
-void load_data_from_disk() {
-    // Note: This function is called before the user and events modules are fully initialized
-    // The actual loading will happen on-demand when users/events are accessed
-    // This function just ensures the directory structure exists
-
-    std::cout << "Storage initialized. Data will be loaded on-demand from disk." << std::endl;
-}

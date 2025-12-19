@@ -1,6 +1,5 @@
 #include "input_handler.h"
 #include "../common/constants.h"
-#include "../common/date.h"
 #include "../common/input.h"
 #include "session.h"
 #include <algorithm>
@@ -129,12 +128,9 @@ bool parse_create_event_input(std::stringstream &args, std::string &message) {
         std::cerr << "Name is too long: " << name << std::endl;
         return false;
     }
-    if (!is_valid_date(date)) {
-        std::cerr << "Invalid date: " << date << std::endl;
-        return false;
-    }
-    if (!is_valid_time(time)) {
-        std::cerr << "Invalid time: " << time << std::endl;
+    std::string date_time = date + " " + time;
+    if (!is_date_time_valid(date_time)) {
+        std::cerr << "Invalid date/time: " << date << " " << time << std::endl;
         return false;
     }
     if (!is_valid_num_attendees(num_attendees)) {

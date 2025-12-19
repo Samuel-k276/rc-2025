@@ -8,9 +8,6 @@
 // Initialize storage directories (USERS and EVENTS)
 void init_storage();
 
-// Load all data from disk into memory
-void load_data_from_disk();
-
 // User persistence functions
 void save_user_password(const std::string &uid, const std::string &password);
 void create_user_login_file(const std::string &uid);
