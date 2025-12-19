@@ -51,6 +51,7 @@ bool parse_logout_input(std::stringstream &args, std::string &message) {
 bool parse_unregister_input(std::stringstream &args, std::string &message) {
     std::string extra;
     if (args >> extra) {
+        std::cerr << "Invalid unregister arguments" << std::endl;
         return false;
     }
     std::string uid = get_user_id();
@@ -62,6 +63,7 @@ bool parse_unregister_input(std::stringstream &args, std::string &message) {
 bool parse_myevents_input(std::stringstream &args, std::string &message) {
     std::string extra;
     if (args >> extra) {
+        std::cerr << "Invalid myevents arguments" << std::endl;
         return false;
     }
     std::string uid = get_user_id();
@@ -75,6 +77,7 @@ bool parse_myevents_input(std::stringstream &args, std::string &message) {
 bool parse_exit_input(std::stringstream &args) {
     std::string extra;
     if (args >> extra) {
+        std::cerr << "Invalid exit arguments" << std::endl;
         return false;
     }
     return true;
@@ -172,6 +175,7 @@ bool parse_close_event_input(std::stringstream &args, std::string &message) {
 bool parse_list_events_input(std::stringstream &args, std::string &message) {
     std::string extra;
     if (args >> extra) {
+        std::cerr << "Invalid list events arguments" << std::endl;
         return false;
     }
     message = command_to_string.at(LIST_EVENTS) + "\n";

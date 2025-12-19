@@ -95,7 +95,6 @@ int main(int argc, char *argv[]) {
                     break;
                 }
                 if (!parse_login_input(args, message)) {
-                    std::cerr << "Invalid login arguments" << std::endl;
                     break;
                 }
                 if (!send_udp_command(UDP_socket_fd, message, res, response)) {
@@ -107,7 +106,6 @@ int main(int argc, char *argv[]) {
             }
             case LOGOUT: {
                 if (!parse_logout_input(args, message)) {
-                    std::cerr << "Invalid logout arguments" << std::endl;
                     break;
                 }
                 std::string response;
@@ -120,7 +118,6 @@ int main(int argc, char *argv[]) {
             }
             case UNREGISTER: {
                 if (!parse_unregister_input(args, message)) {
-                    std::cerr << "Invalid unregister arguments" << std::endl;
                     break;
                 }
                 if (!send_udp_command(UDP_socket_fd, message, res, response)) {
@@ -132,7 +129,6 @@ int main(int argc, char *argv[]) {
             }
             case MYEVENTS: {
                 if(!parse_myevents_input(args, message)) {
-                    std::cerr << "Invalid myevents arguments" << std::endl;
                     break;
                 }
                 if (!send_udp_command(UDP_socket_fd, message, res, response)) {
@@ -160,7 +156,6 @@ int main(int argc, char *argv[]) {
             }
             case EXIT:
                 if (!parse_exit_input(args)) {
-                    std::cerr << "Invalid exit arguments" << std::endl;
                     break;
                 }
                 if (is_user_logged_in()) {
@@ -172,7 +167,6 @@ int main(int argc, char *argv[]) {
                 break;
             case CREATE_EVENT: {
                 if (!parse_create_event_input(args, message)) {
-                    std::cerr << "Invalid create event arguments" << std::endl;
                     break;
                 }
                 if (!send_tcp_command(message, res, response)) {
@@ -184,7 +178,6 @@ int main(int argc, char *argv[]) {
             }
             case CLOSE_EVENT:
                 if (!parse_close_event_input(args, message)) {
-                    std::cerr << "Invalid close event arguments" << std::endl;
                     break;
                 }
                 if (!send_tcp_command(message, res, response)) {
@@ -195,7 +188,6 @@ int main(int argc, char *argv[]) {
                 break;
             case LIST_EVENTS:
                 if (!parse_list_events_input(args, message)) {
-                    std::cerr << "Invalid list events arguments" << std::endl;
                     break;
                 }
                 if (!send_tcp_command(message, res, response)) {
@@ -206,7 +198,6 @@ int main(int argc, char *argv[]) {
                 break;
             case SHOW_EVENT_DETAILS:
                 if (!parse_show_event_details_input(args, message)) {
-                    std::cerr << "Invalid show event details arguments" << std::endl;
                     break;
                 }
                 if (!send_tcp_command(message, res, response)) {
@@ -217,7 +208,6 @@ int main(int argc, char *argv[]) {
                 break;
             case RESERVE:
                 if (!parse_reserve_input(args, message)) {
-                    std::cerr << "Invalid reserve arguments" << std::endl;
                     break;
                 }
                 if (!send_tcp_command(message, res, response)) {
@@ -228,7 +218,6 @@ int main(int argc, char *argv[]) {
                 break;
             case CHANGE_PASS:
                 if (!parse_change_pass_input(args, message)) {
-                    std::cerr << "Invalid change pass arguments" << std::endl;
                     break;
                 }
                 if (!send_tcp_command(message, res, response)) {
