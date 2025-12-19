@@ -10,6 +10,8 @@
 #include <iostream>
 #include <netdb.h>
 #include <netinet/in.h>
+#include <sstream>
+#include <string>
 #include <unistd.h>
 
 
